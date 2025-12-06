@@ -1,0 +1,102 @@
+.imatheq_overlay {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.imatheq_modal_dialogContainer.imatheq_modal_desktop.imatheq_modal_restore {
+    position: fixed;
+    bottom: 1px;
+    right: 1px;
+    /*margin-right: 10px;*/
+    box-shadow: rgba(0, 0, 0, 0.5) 0 2px 8px;
+    border: 1px solid
+}
+.imatheq_modal_dialogContainer.imatheq_modal_desktop {
+    font-size: 14px;
+}
+.imatheq_modal_dialogContainer {
+    overflow: hidden;
+    border: none;
+    background: #fafafa;
+    z-index: 999999;
+}
+.imatheq_modal_title_bar {
+    display: block;
+    background-color: #6D3353;	/*#5c5b5b;*/	/*E8EAEB;*/
+}
+.imatheq_modal_title {
+    color: #fff;
+	font-family: Cambria,'Palatino Linotype','Book Antiqua','URW Palladio L',serif;
+	padding: 5px 0 5px 10px;
+}
+.imatheq_modal_close_button {
+    float: right;
+    cursor: pointer;
+    color: #fff;
+    padding: 5px 10px 5px 0;
+    background: url(../icons/general/imatheq_close.png);
+    background-size: 10px;
+    margin: 10px 7px 0 0;
+}
+.imatheq_modal_minimize_button.imatheq_modal_minimized {
+    background: url('../icons/general/imatheq_fulls.png') 0px 0px no-repeat;
+    background-size: 10px;
+}
+.imatheq_modal_minimize_button.imatheq_modal_maximized {
+    background: url('../icons/general/imatheq_min.png') 0px 0px no-repeat;
+    background-size: 10px;
+}
+.imatheq_modal_restore_button.imatheq_modal_restore {
+    background: url(../icons/general/imatheq_enlarge.png) 0px 0px no-repeat;
+    background-size: 10px;
+}
+.imatheq_modal_restore_button.imatheq_modal_maximized {
+    background: url(../icons/general/imatheq_shrink.png) 0px 0px no-repeat;
+    background-size: 10px;
+}
+.imatheq_modal_restore_button {
+    float: right;
+    cursor: pointer;
+    color: #5c5b5b;
+    margin: 10px 7px 0 0;
+    padding: 5px 10px 5px 0;
+    top: inherit;
+}
+.imatheq_modal_minimize_button.imatheq_modal_restore {
+    background: url(../icons/general/imatheq_min.png) 0px 0px no-repeat;
+    background-size: 10px;
+}
+.imatheq_modal_minimize_button.imatheq_modal_miximize {
+    background: url(../icons/general/imatheq_fulls.png) 0px 0px no-repeat;
+    background-size: 10px;
+}
+.imatheq_modal_dialogContainer.imatheq_modal_desktop {
+    font-size: 14px;
+}
+.imatheq_modal_minimize_button {
+    float: right;
+    cursor: pointer;
+    color: #fff;
+    padding: 5px 10px 5px 0;
+    top: inherit;
+    margin: 10px 7px 0 0;
+}
+.imatheq_modal_dialogContainer.imatheq_modal_desktop {
+    font-size: 14px;
+}
+.imatheq_noselect {
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}

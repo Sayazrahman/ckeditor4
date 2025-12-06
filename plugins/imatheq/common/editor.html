@@ -1,0 +1,232 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>iMathEQ | Online Mathematics Equation Editor</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="icons/favicon.ico">
+<script type='text/javascript' charset = "utf-8" src='//www.imatheq.com/imatheq/com/imatheq/scripts/imatheqfunctions.js'></script>
+<!-- <script type='text/javascript' charset = "utf-8" src='https://wilp.wheebox.com/WET-2/assest/js/tinymce/js/tinymce/plugins/imatheq/common/assest/imatheqfunctions.js'></script -->
+<script type="text/javascript" charset = "utf-8" >
+  var iMatheq_editor;
+  var lang = getParameterByName('lang');
+    var lskey = "";
+  if(!lang) lang = "en";	//'en','zh-cn','zh-tw','nn','de','fr','fi','nl','sv','pl','it','es','tr','da','pt','lv','ko'
+  var ime_current_equation_id = "";
+  var iMathEQ_clearing = false;
+  
+  window.onload=function () {
+	  iMatheq_editor = org.imatheq.formulaeditor.createEditor(document.getElementById('myEditor'), 
+			  lskey, lang);
+  }
+  
+  function ajax_call(input) {	//url, values, callback, errorHandler) {
+      var request = new XMLHttpRequest();
+      request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+          if (request.status == 200) {			
+			try {
+			  var data = JSON.parse(this.responseText);
+			  input.success(data); 
+			} catch (err) {
+			  input.error(this,request.status,err);
+			}
+          } 
+          else {
+			input.error(this, request.status, err);
+          }
+        } 
+      };
+
+      request.open(input.type, input.url);
+      // This header tells the server how to interpret the body of the request.
+      request.setRequestHeader("Content-Type", 
+                               "application/x-www-form-urlencoded");
+	  request.responseType = "text";
+      // Encode the properties of the values object and send them as
+      // the body of the request.
+      request.send(this.encodeFormData(input.data));
+
+	  //request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+	  //request.send(JSON.stringify(input.data));
+  }
+
+  function encodeFormData(data) {
+      var pairs = [];
+      var regexp = /%20/g; // A regular expression to match an encoded space
+
+      for (var name in data) {
+        var value = data[name].toString();
+        // Create a name/value pair, but encode name and value first
+        // The global function encodeURIComponent does almost what we want,
+        // but it encodes spaces as %20 instead of as "+". We have to
+        // fix that with String.replace()
+        var pair = encodeURIComponent(name).replace(regexp,"+") + '=' +
+          encodeURIComponent(value).replace(regexp,"+");
+        pairs.push(pair);
+      }
+
+      // Concatenate all the name/value pairs, separating them with &
+      return pairs.join('&');
+  }
+
+  parentWin = window.opener ? window.opener : window.parent;;
+
+  var setMathML_cnt = 0;
+  function setMathML(mml, iMathEQ_qid)
+  {
+	if(mml != "") {
+		ime_current_equation_id = iMathEQ_qid ? iMathEQ_qid : "";
+		if(iMatheq_editor || iMathEQ_clearing) {
+			iMatheq_editor.setMathML(mml);
+			setMathML_cnt = 0;
+		} else {
+			if(++setMathML_cnt >10) {
+				setMathML_cnt = 0;
+				return;
+			}
+			window.setTimeout(setMathML(mml, iMathEQ_qid), 200);
+		}
+	}
+  }
+
+
+  function iMathEQ_SaveEquation()
+  {
+    try {
+		var mml = iMatheq_editor.getMathML()
+		var arrmml = mml.split(/(?<=>)|(?=<)/);
+		if(arrmml && arrmml.length == 3 && arrmml[1] == "<mrow/>") {
+			//alert("There is no equation to save.");
+			return;
+		}
+		var imagedata = iMatheq_editor.getImage();
+		var mathml = encodeURIComponent(mml);
+		//var imagedata = iMatheq_editor.getImage();
+		//var mathml = encodeURIComponent(iMatheq_editor.getMathML());
+		var alttext = iMatheq_editor.getAltText();
+		if(parentWin._imatheq_conf_image_format == "base64") {
+			parentWin.iMathEQ_SaveImageResult("<img imatheq-mml=\""  
+				+ mathml + "\" src=\"" + imagedata + "\"/>");
+			if(window.opener) {
+				window.close();
+			} else {
+				parentWin.imatheq_closeModalWindow();
+			}
+		} else {	//png, save image to server
+			var href = window.location.href;
+			var arr = href.split("/");
+			//var url = parentWin._imatheq_conf_save_image_api;
+			var url = parentWin._imatheq_conf_save_image_api + 
+				"?action=save_equation_image&lsk=" + encodeURIComponent(lskey) + 
+				"&dm=" + 
+				arr[2].replace(":", "_") + "&iMathEQ_qid=" + ime_current_equation_id;
+			ajax_call({
+				url: url,
+	  			type: "post",
+	  			dataType: "json",	//receiving data
+	  			data: { 
+	  			  action: "save_equation_image",
+	  			  lsk: lskey,
+				  dm: arr[2].replace(":", "_"),
+				  iMathEQ_qid: ime_current_equation_id,
+				  //image_data: encodeURIComponent(imagedata)
+				  image_data: imagedata
+	  			},
+	  			contentType: 'application/json',	//sending data
+	  			success: function (data) {
+					if(data && data["error"] !== undefined) {
+						alert(decodeURIComponent(data["error"]));
+					/*} else if(data && data.substring(0,6) == "error:") {
+						alert(data);*/
+					} else {
+						var ret_url = parentWin._imatheq_conf_image_url;
+						var rnd_str = Math.random().toString(16);
+						if(parentWin._imatheq_conf_image_url_type == "api") {
+							ret_url += "?iMathEQ_qid=" + data["iMathEQ_qid"] + 
+							"&r=" + rnd_str;
+						} else {						
+							if(ret_url[ret_url.length-1] != "/") ret_url += "/";
+							ret_url += data["iMathEQ_qid"] + ".png?iMathEQ_qid=" +
+							data["iMathEQ_qid"] + "&r=" + rnd_str;
+						}
+						parentWin.iMathEQ_SaveImageResult("<img alt=\"" + alttext + 
+							"\" imatheq-mml=\""  
+							+ mathml + "\" src=\"" + ret_url + "\"/>");
+						if(window.opener) {
+							window.close();
+						} else {
+							parentWin.imatheq_closeModalWindow();
+						}
+					}
+	  			},
+	  			error:function(data,status,er) {
+					if(data.responseText == "") {
+						alert("error: " + decodeURIComponent(data.responseText) + 
+							", status: " + status + ", error:"+er);
+					} else {
+						alert(decodeURIComponent(data.responseText));
+					}
+	  			}
+			});
+		}
+    }
+    catch (err) {
+		alert("Error: "+err);
+	}
+  }
+  
+  function getImage()
+  {
+  	var imagedata = iMatheq_editor.getImage();
+    try {
+		var mathml = encodeURIComponent(iMatheq_editor.getMathML());
+		var img = iMatheq_editor.getImage();
+		parentWin.iMathEQ_SaveImageResult("<img imatheq-mml=\""  
+				+ mathml + "\" src=\"" + img + "\"/>");
+		if(window.opener) {
+			window.close();
+		} else {
+			parentWin.imatheq_closeModalWindow();
+		}
+    }
+    catch (err) {}
+  }
+
+  var clearMathML_cnt = 0;
+  function clearMathML()
+  {
+	iMathEQ_clearing = true;
+	ime_current_equation_id = "";
+	if(iMatheq_editor) {
+		iMatheq_editor.clearMathML();
+		clearMathML_cnt = 0;
+		iMathEQ_clearing = false
+	} else {
+		if(++clearMathML_cnt >10) {
+			clearMathML_cnt = 0;
+			return;
+		}
+		window.setTimeout(clearMathML(), 200);
+	}
+  }
+
+  function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+  }
+</script>
+</head>
+<body>
+	<div id="myEditor" class="imatheqvisibletextarea"></div>
+	<div style="margin:-20px 0 0 6px">
+	<input type="button" onclick="javascript:iMathEQ_SaveEquation()" value=Save>
+	</div>
+</body>
+</html>

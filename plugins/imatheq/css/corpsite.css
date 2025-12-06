@@ -1,0 +1,110 @@
+.navbar-fixed-top .nav {
+    padding: 15px 0;
+}
+//.navbar-brand { min-height: inherit }
+
+
+@media (max-width: 767px) { 
+    .navbar-brand {
+        padding: 0;        
+    }
+
+    .navbar-brand img {
+        margin-top: 5px;
+        margin-left: 5px;
+    }
+}
+
+.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
+color: #000;  /*Sets the text hover color on navbar*/
+}
+
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active >   
+ a:hover, .navbar-default .navbar-nav > .active > a:focus {
+color: white; /*BACKGROUND color for active*/
+background-color: #030033;
+}
+
+  .navbar-default {
+    background-color: #ffffff;
+    border-color: #ffffff;
+}
+
+  .dropdown-menu > li > a:hover,
+   .dropdown-menu > li > a:focus {
+    color: #262626;
+   text-decoration: none;
+  background-color: #66CCFF;  /*change color of links in drop down here*/
+   }
+
+ .nav > li > a:hover,
+ .nav > li > a:focus {
+    text-decoration: none;
+    background-color: silver; /*Change rollover cell color here*/
+  }
+
+
+  .navbar-default .navbar-nav > li > a {
+   color: #131211; /*Change active text color here*/
+    }
+
+	.jumbotron {
+	color:white;
+	background-color: black;
+	background: linear-gradient(45deg, #020031 0%,#6d3353 100%);
+	height: 380px;
+	padding-top: 32px;
+    padding-bottom: 0px;
+    min-width:400px;
+	}
+	
+ul.b {
+    list-style-type: square;
+color:white;
+ }
+ 
+ul.b li{
+  margin: 15px 0;
+}
+#screen {
+    width: 100%;
+}
+
+.myhighlights {
+margin-top:-300px;
+z-index:1000;
+}
+
+.lead {
+color:white
+}
+
+.table > thead > tr > th, .table > tbody > tr > td {
+vertical-align:middle;
+}
+
+.imbox {
+width:100%;
+height:auto;
+border:3px solid #662F52;
+background-color:#337AB7;border-radius:20px
+}
+
+.imbox div:first-child {
+margin-left:5px;
+margin-right:5px;
+border-top:0;
+border-right:0;
+border-left:0;
+border-bottom:2px solid white;
+}
+
+#main_form .container {
+margin-top:10px;
+border-top:1px solid black;
+border-bottom:1px solid black;
+padding-top:20px;
+padding-bottom:20px;
+padding-left:0;
+padding-right:0
+}

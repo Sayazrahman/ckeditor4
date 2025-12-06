@@ -1,0 +1,77 @@
+ol {
+	counter-reset: item;
+}
+	
+div > ol.ol_no_number {
+	list-style-type: none;
+}
+   
+div > ol.ol_no_number > li {
+	margin-left: -13px;
+}
+
+ol > li {
+	counter-increment: item;
+}
+
+ol ol > li {
+	display: block;
+}
+
+ol ol > li:not(.no_number):before {
+	content: counters(item, ".") ". ";
+	margin-left: -20px;
+}
+.no_number {
+	font-style: italic;
+	font-family: "Ubuntu Mono";
+	color: "#212F3C";
+}
+code {
+	font-family: monospace,serif;
+	font-size: 1.2em;
+	color: black;
+	background-color: white
+}
+
+.p_ind1 {
+	margin-left: 20px;
+}
+
+.p-value {
+	padding-left: 5px;
+}
+
+/* Apply styles to all tables */
+table {
+	border-collapse: collapse;
+	width: 100%;
+	margin-bottom: 20px;
+	font-size: 14px;
+}
+
+/* Style table headers */
+thead td {
+	background-color: #E0E0E0;
+	text-align: left;
+	padding: 8px;
+	border: 1px solid #C8C8C8;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+/* Style table rows */
+tr:nth-child(even) {
+	background-color: #f2f2f2;
+}
+
+tr:nth-child(odd) {
+	background-color: #ffffff;
+}
+
+/* Style table data cells */
+td {
+	text-align: left;
+	padding: 8px;
+	border: 1px solid #dddddd;
+}

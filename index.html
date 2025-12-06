@@ -1,0 +1,28 @@
+<script src="https://do3n1uzkew47z.cloudfront.net/siteassets/LOGIN/assets/loginPageV2/js/jquery-2.2.0.min.js"></script>
+<script type="text/javascript" src="ckeditor.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/literallycanvas/0.6.1/css/literallycanvas.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/literallycanvas/0.6.1/js/literallycanvas.js"></script>
+<body>
+Question : <div id="introduction" contenteditable="true" style="border: 1px solid;"></div>
+op1 : <div id="op1" contenteditable="true" style="border: 1px solid;"></div>
+
+
+
+<button type="button"  onclick="getEditorContent();">Get Editor Content</button>
+<button id="toggle">Start editing</button>
+		<button id="reset" style="display:none">Reset content</button>
+		</body>
+<script>
+
+			var qtext = CKEDITOR.inline(document.getElementById('introduction'));
+			var option1 = CKEDITOR.inline(document.getElementById('op1'));
+
+function getEditorContent(){
+	var nicEQ = null;
+	
+	niceEQ = CKEDITOR.instances['qtext'];
+	var qtext = document.getElementById('qtext').innerHTML;
+	var op1 = document.getElementById('op1').innerHTML;
+	console.log(qtext+"==="+op1);
+}			
+</script>
