@@ -74,7 +74,7 @@ CKEDITOR.plugins.add( 'imatheq', {
 		params += ', left='+Math.floor(screen.width*0.1);
 		params += ', directories=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,resizable=yes,fullscreen=no';
      
-		var url = baseurl + "editor.html";
+		var url = baseurl + "tinyMCMathEditor.html";
 		
 		if(this.win === undefined || this.win === null || this.win.closed) {
 			this.win = window.open(url, "iMathEQ", params);

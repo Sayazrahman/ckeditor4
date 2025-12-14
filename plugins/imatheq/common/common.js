@@ -272,7 +272,7 @@ function imatheq_openEditor(hostEditor, lang, isIframe, newFormula) {
         isIframe = true;
     }
 
-	var editor_name = "editor.html";
+	var editor_name = "tinyMCMathEditor.html";
     var path = _imatheq_conf_path.slice(-1) == "/" ? _imatheq_conf_path + "common/" + editor_name + "?lang="+lang : _imatheq_conf_path + "/common/" + editor_name + "?lang="+lang;
 
 	var mml = "";
@@ -449,7 +449,11 @@ ModalWindow.prototype.create = function(lang) {
 	var oiframe = document.createElement("iframe");
 	oiframe.classList.add("imatheq_modal_iframe", "imatheq_modal_desktop", "imatheq_modal_restore");
 	oiframe.title = "iMathEQ Editor Modal Window";
-	oiframe.src = imatheq_getCommonPath() + "/common/editor.html?lang=" + lang + "&amp;dir=ltr"
+	oiframe.src =
+    imatheq_getCommonPath() +
+    "/common/tinyMCMathEditor.html?lang=" +
+    lang +
+    "&amp;dir=ltr";
 	oiframe.style.width = "600px"; 
 	oiframe.style.height = "400px";
 	iframediv.appendChild(oiframe);
