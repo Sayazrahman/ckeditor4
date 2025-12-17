@@ -1,28 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <script src="https://do3n1uzkew47z.cloudfront.net/siteassets/LOGIN/assets/loginPageV2/js/jquery-2.2.0.min.js"></script>
 <script type="text/javascript" src="ckeditor.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/literallycanvas/0.6.1/css/literallycanvas.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/literallycanvas/0.6.1/js/literallycanvas.js"></script>
+
+<style>
+/* Math Dialog Overlay */
+.math-dialog-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+.math-dialog-frame {
+  width: 90%;
+  max-width: 900px;
+  height: 85vh;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.math-formula-img {
+  cursor: pointer;
+  vertical-align: middle;
+  max-height: 2.5em;
+  height: auto;
+  width: auto;
+  border: none;
+  padding: 2px;
+  margin: 0 2px;
+  background: transparent;
+}
+
+.math-formula-img:hover {
+  background: rgba(0, 123, 255, 0.05);
+}
+</style>
+</head>
+
 <body>
 Question : <div id="introduction" contenteditable="true" style="border: 1px solid;"></div>
 op1 : <div id="op1" contenteditable="true" style="border: 1px solid;"></div>
 
-
-
-<button type="button"  onclick="getEditorContent();">Get Editor Content</button>
+<button type="button" onclick="getEditorContent();">Get Editor Content</button>
 <button id="toggle">Start editing</button>
-		<button id="reset" style="display:none">Reset content</button>
-		</body>
-<script>
+<button id="reset" style="display:none">Reset content</button>
 
-			var qtext = CKEDITOR.inline(document.getElementById('introduction'));
-			var option1 = CKEDITOR.inline(document.getElementById('op1'));
+<!-- Math Dialog -->
+<div id="mathDialogOverlay" class="math-dialog-overlay">
+  <iframe id="mathEditorFrame" class="math-dialog-frame" src=""></iframe>
+</div>
+
+<script>
+var qtext = CKEDITOR.inline(document.getElementById('introduction'));
+var option1 = CKEDITOR.inline(document.getElementById('op1'));
+
+// Track which div is active
+let activeDiv = null;
+let editingImage = null;
+
+// When user focuses on a div, track it
+document.getElementById('introduction').addEventListener('focus', function() {
+  activeDiv = this;
+});
+
+document.getElementById('op1').addEventListener('focus', function() {
+  activeDiv = this;
+});
+
+/* Math Plugin */
+CKEDITOR.plugins.add('mathformula', {
+  init: function(editor) {
+    editor.ui.addButton('MathFormula', {
+      label: 'Math Formula',
+      command: 'insertMath',
+      toolbar: 'insert',
+      icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHRleHQgeD0iNCIgeT0iMTMiIGZvbnQtc2l6ZT0iMTQiPuKOkTwvdGV4dD48L3N2Zz4='
+    });
+    
+    editor.addCommand('insertMath', {
+      exec: function(editor) {
+        // Set active div based on editor
+        if (editor.element.$.id === 'introduction') {
+          activeDiv = document.getElementById('introduction');
+        } else if (editor.element.$.id === 'op1') {
+          activeDiv = document.getElementById('op1');
+        }
+        
+        editingImage = null;
+        document.getElementById('mathDialogOverlay').style.display = 'flex';
+        
+        const iframe = document.getElementById('mathEditorFrame');
+        iframe.src = 'plugins/imatheq/common/math-editor.html';
+      }
+    });
+    
+    // Double click to edit existing formula
+    editor.on('doubleclick', function(evt) {
+      const el = evt.data.element;
+      if (el && el.$ && el.$.classList && el.$.classList.contains('math-formula-img')) {
+        // Set active div
+        if (editor.element.$.id === 'introduction') {
+          activeDiv = document.getElementById('introduction');
+        } else if (editor.element.$.id === 'op1') {
+          activeDiv = document.getElementById('op1');
+        }
+        
+        editingImage = el.$;
+        document.getElementById('mathDialogOverlay').style.display = 'flex';
+        const iframe = document.getElementById('mathEditorFrame');
+        iframe.src = 'plugins/imatheq/common/math-editor.html';
+        
+        iframe.onload = function() {
+          const latex = el.$.getAttribute('data-imath-latex') || '';
+          setTimeout(() => {
+            if (iframe.contentWindow.setInitialLatex) {
+              iframe.contentWindow.setInitialLatex(latex);
+            }
+          }, 500);
+        };
+        evt.data.dialog = null;
+      }
+    });
+  }
+});
+
+qtext.config.extraPlugins = 'mathformula';
+option1.config.extraPlugins = 'mathformula';
+
+/* Receive formula - SIMPLE DIRECT INSERTION */
+window.receiveFormulaFromMathEditor = function(latex, imgSrc, encodedMathML) {
+  console.log('Received formula');
+  console.log('LaTeX:', latex);
+  console.log('Image source:', imgSrc.substring(0, 100) + '...');
+  console.log('Active div:', activeDiv);
+  
+  if (!latex || !imgSrc) {
+    alert('Error: Missing data from math editor');
+    return;
+  }
+  
+  if (!activeDiv) {
+    alert('Error: Please click inside Question or op1 field first!');
+    return;
+  }
+  
+  try {
+    // Create the image element with SVG source
+    const img = document.createElement('img');
+    img.className = 'math-formula-img';
+    img.src = imgSrc;
+    img.setAttribute('data-imath-latex', latex);
+    img.setAttribute('imatheq-mml', encodedMathML);
+    img.setAttribute('contenteditable', 'false');
+    img.style.verticalAlign = 'middle';
+    img.style.maxHeight = '2.5em';
+    img.style.height = 'auto';
+    img.style.width = 'auto';
+    img.style.border = 'none';
+    img.style.padding = '2px';
+    img.style.margin = '0 2px';
+    img.style.cursor = 'pointer';
+    img.style.display = 'inline-block';
+    
+    if (editingImage) {
+      // Replace existing image
+      editingImage.parentNode.replaceChild(img, editingImage);
+      console.log('Replaced existing image');
+    } else {
+      // Insert new image at cursor position or end
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0 && activeDiv.contains(selection.anchorNode)) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(img);
+        
+        // Add space after
+        const space = document.createTextNode('\u00A0');
+        range.collapse(false);
+        range.insertNode(space);
+        
+        // Move cursor after space
+        range.setStartAfter(space);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } else {
+        // Just append at the end
+        activeDiv.appendChild(img);
+        activeDiv.appendChild(document.createTextNode('\u00A0'));
+      }
+      console.log('Inserted new image');
+    }
+    
+    // Close dialog
+    document.getElementById('mathDialogOverlay').style.display = 'none';
+    document.getElementById('mathEditorFrame').src = '';
+    
+    // Update CKEditor
+    if (activeDiv.id === 'introduction') {
+      qtext.updateElement();
+    } else if (activeDiv.id === 'op1') {
+      option1.updateElement();
+    }
+    
+    console.log('Formula inserted successfully!');
+  } catch (error) {
+    console.error('Error inserting formula:', error);
+    alert('Error inserting formula: ' + error.message);
+  }
+};
+
+// Global click handler for all math images (both new and existing)
+document.addEventListener('click', function(e) {
+  const mathImg = e.target.closest('.math-formula-img');
+  if (mathImg && mathImg.classList.contains('math-formula-img')) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('Math image clicked');
+    
+    // Set the active div and editing image
+    activeDiv = mathImg.closest('#introduction') || mathImg.closest('#op1');
+    editingImage = mathImg;
+    
+    // Open math editor
+    document.getElementById('mathDialogOverlay').style.display = 'flex';
+    const iframe = document.getElementById('mathEditorFrame');
+    iframe.src = 'plugins/imatheq/common/math-editor.html';
+    
+    console.log('Loading iframe from:', iframe.src);
+    
+    // Load existing latex
+    iframe.onload = function() {
+      const latex = mathImg.getAttribute('data-imath-latex') || '';
+      console.log('Loading existing formula:', latex);
+      setTimeout(() => {
+        if (iframe.contentWindow.setInitialLatex) {
+          iframe.contentWindow.setInitialLatex(latex);
+        } else {
+          console.error('setInitialLatex function not found in iframe');
+        }
+      }, 500);
+    };
+    
+    iframe.onerror = function() {
+      console.error('Failed to load math-editor.html');
+      alert('Error: Cannot load math editor. Check that the path plugins/imatheq/common/math-editor.html is correct');
+      document.getElementById('mathDialogOverlay').style.display = 'none';
+    };
+  }
+}, true);
+
+window.closeMathDialog = function() {
+  document.getElementById('mathDialogOverlay').style.display = 'none';
+  document.getElementById('mathEditorFrame').src = '';
+};
+
+document.getElementById('mathDialogOverlay').addEventListener('click', function(e) {
+  if (e.target === this) window.closeMathDialog();
+});
 
 function getEditorContent(){
-	var nicEQ = null;
-	
-	niceEQ = CKEDITOR.instances['qtext'];
-	var qtext = document.getElementById('qtext').innerHTML;
-	var op1 = document.getElementById('op1').innerHTML;
-	console.log(qtext+"==="+op1);
-}			
+  var qtextContent = document.getElementById('introduction').innerHTML;
+  var op1Content = document.getElementById('op1').innerHTML;
+  console.log('Question:', qtextContent);
+  console.log('Option 1:', op1Content);
+}
 </script>
+
+</body>
+</html>
