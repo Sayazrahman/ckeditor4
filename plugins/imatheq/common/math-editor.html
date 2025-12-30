@@ -19,6 +19,7 @@ window.MathJax = {
   svg: { fontCache: "global" },
   startup: {
     ready: () => {
+      console.log("MathJax ready");
       MathJax.startup.defaultReady();
     }
   }
@@ -61,29 +62,39 @@ window.MathJax = {
   }
 
   #math-toolbar {
-    background: #f0f0f0;
+    background: #f5f5f5;
     border: 1px solid #ccc;
-    padding: 8px;
-    margin-bottom: 15px;
+    padding: 4px;
+    margin-bottom: 10px;
     border-radius: 4px;
     display: flex;
     flex-wrap: wrap;
-    gap: 3px;
+    gap: 1px;
   }
 
   .math-btn {
-    width: 36px;
-    height: 32px;
-    border: 1px solid #999;
-    background: #fff;
+    width: 28px;
+    height: 28px;
+    border: 1px solid #bbb;
+    background: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
     cursor: pointer;
-    font-size: 13px;
-    border-radius: 3px;
-    transition: background 0.2s;
+    font-size: 14px;
+    border-radius: 2px;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
   }
 
   .math-btn:hover {
-    background: #e9ecef;
+    background: linear-gradient(to bottom, #fff 0%, #e5e5e5 100%);
+    border-color: #999;
+  }
+
+  .math-btn:active {
+    background: #e0e0e0;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
   }
 
   #mathlive-editor {
@@ -208,7 +219,6 @@ window.MathJax = {
     smart-fence="true"
     keypress-sound="none"
   ></math-field>
-
 </div>
 
 <div class="footer">
@@ -258,7 +268,10 @@ function createFallbackImage(latex, canvas, ctx) {
 async function latexToPNG(latex) {
   return new Promise(async (resolve, reject) => {
     try {
+      // Wait for MathJax to be ready
       if (!window.MathJax || !MathJax.tex2svg) {
+        console.log("MathJax not ready yet, waiting...");
+        // Wait up to 3 seconds for MathJax
         let attempts = 0;
         while ((!window.MathJax || !MathJax.tex2svg) && attempts < 30) {
           await new Promise(r => setTimeout(r, 100));
@@ -266,9 +279,14 @@ async function latexToPNG(latex) {
         }
         
         if (!window.MathJax || !MathJax.tex2svg) {
+          console.log("MathJax failed to load, using text fallback");
           return resolve(createFallbackPNG(latex));
         }
       }
+
+      console.log("Using MathJax to render formula");
+      
+      // Convert LaTeX to SVG using MathJax
       const svg = MathJax.tex2svg(latex);
       const svgElement = svg.querySelector('svg');
       
@@ -305,7 +323,8 @@ async function latexToPNG(latex) {
         ctx.drawImage(img, 20, 20, width, height);
         
         const dataUrl = canvas.toDataURL("image/png");
-
+        console.log("MathJax PNG generated, length:", dataUrl.length);
+        console.log("Canvas size:", canvas.width, "x", canvas.height);
         URL.revokeObjectURL(url);
         resolve(dataUrl);
       };
@@ -352,6 +371,7 @@ function createFallbackPNG(latex) {
   ctx.textBaseline = "middle";
   ctx.fillText(text, canvas.width / 2, canvas.height / 2);
   
+  console.log("Fallback PNG generated");
   return canvas.toDataURL("image/png");
 }
 
@@ -361,60 +381,66 @@ function createFallbackPNG(latex) {
 
 function initializeToolbar() {
   const buttons = [
-    ["\\frac{#@}{#?}", "a/b"],
-    ["^{#?}", "x²"],
-    ["_{#?}", "x₁"],
-    ["\\sqrt{#?}", "√"],
-    ["\\sqrt[#@]{#?}", "ⁿ√"],
-    ["\\int_{#@}^{#?}", "∫"],
-    ["\\sum_{#@}^{#?}", "Σ"],
-    ["\\prod_{#@}^{#?}", "∏"],
-    ["\\lim_{#?}", "lim"],
+    ["\\frac{a}{b}", "a/b"],
+    ["^{2}", "x²"],
+    ["_{i}", "xᵢ"],
+    ["\\sqrt{x}", "√"],
+    ["\\sqrt[3]{x}", "³√"],
+    ["\\sqrt[n]{x}", "ⁿ√"],
+    
     ["\\sin", "sin"],
+    ["\\sinh", "sinh"],
     ["\\cos", "cos"],
     ["\\tan", "tan"],
-    ["\\log_{#?}", "log"],
+    ["\\log", "log"],
     ["\\ln", "ln"],
-    ["\\infty", "∞"],
+    ["\\lim", "lim"],
+    
+    ["\\int", "∫"],
+    ["\\iint", "∬"],
+    ["\\sum", "Σ"],
+    ["\\prod", "∏"],
+    
     ["+", "+"],
     ["-", "−"],
     ["\\times", "×"],
     ["\\div", "÷"],
+    ["\\pm", "±"],
     ["=", "="],
     ["\\neq", "≠"],
+    ["\\approx", "≈"],
     ["\\geq", "≥"],
     ["\\leq", "≤"],
+    
     ["\\pi", "π"],
-    ["\\theta", "θ"],
     ["\\alpha", "α"],
     ["\\beta", "β"],
     ["\\gamma", "γ"],
-    ["\\left|#?\\right|", "|x|"],
-    ["\\left(#?\\right)", "( )"],
-    ["\\left[#?\\right]", "[ ]"],
+    ["\\theta", "θ"],
+    ["\\lambda", "λ"],
+    ["\\mu", "μ"],
+    ["\\sigma", "σ"],
+    ["\\omega", "ω"],
+    ["\\infty", "∞"],
+    
+    ["\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}", "( )"],
+    ["\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}", "[ ]"],
+    ["(x)", "()"],
+    ["[x]", "[]"],
+    ["\\{x\\}", "{}"],
+    ["|x|", "||"],
     ["\\rightarrow", "→"],
     ["\\Rightarrow", "⇒"],
   ];
 
   const toolbar = document.getElementById('math-toolbar');
   toolbar.innerHTML = buttons
-    .map(([cmd, label]) => `
-      <button class="math-btn" data-command="${cmd}" type="button">
-        ${label}
-      </button>
-    `)
+    .map(([cmd, label]) => `<button class="math-btn" data-command="${cmd}" type="button">${label}</button>`)
     .join('');
 }
 
 function setupEvents() {
   const field = document.getElementById('mathlive-editor');
-  const preview = document.getElementById('latex-preview');
-
-  // Live preview
-  function updatePreview() {
-    preview.textContent = field.getValue('latex') || '(empty)';
-  }
-  field.addEventListener('input', updatePreview);
 
   // Toolbar buttons
   document.querySelectorAll('.math-btn').forEach(btn => {
@@ -423,52 +449,14 @@ function setupEvents() {
       if (!cmd) return;
       field.focus();
       field.insert(cmd);
-      setTimeout(updatePreview, 20);
     });
-  });
-
-  // Export buttons
-  document.querySelectorAll('.export-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const type = btn.getAttribute('data-type');
-      const latex = field.getValue('latex');
-      if (!latex) return;
-
-      if (type === 'mathml') {
-        const mathml = latexToMathML(latex);
-        copyToClipboard(mathml, 'MathML');
-      }
-
-      if (type === 'svg') {
-        try {
-          const svg = MathJax.tex2svg(latex);
-          const svgString = MathJax.startup.adaptor.outerHTML(svg);
-          copyToClipboard(svgString, 'SVG XML');
-        } catch (e) {
-          alert('SVG export failed: ' + e.message);
-        }
-      }
-
-      if (type === 'png') {
-        const png = await latexToPNG(latex);
-        downloadImage(png, 'formula.png');
-      }
-    });
-  });
-
-  // Clear button
-  document.getElementById('math-clear').addEventListener('click', () => {
-    field.setValue('');
-    updatePreview();
   });
 }
 
 // Set initial latex (called from parent)
 window.setInitialLatex = function(latex) {
   const field = document.getElementById('mathlive-editor');
-  const preview = document.getElementById('latex-preview');
   field.setValue(latex);
-  preview.textContent = latex;
 };
 
 // Save formula
@@ -482,10 +470,13 @@ async function saveFormula() {
   }
 
   try {
+    console.log('Converting LaTeX to MathML...');
     
+    // Convert LaTeX to MathML
     const mathML = latexToMathML(latex);
     const encodedMathML = encodeURIComponent(mathML);
     
+    // Create SVG with embedded MathML - NO fixed viewBox, let it size naturally
     const svgData = `<svg xmlns="http://www.w3.org/2000/svg">
       <foreignObject x="0" y="0" width="100%" height="100%">
         <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">${mathML}</math>
@@ -494,9 +485,14 @@ async function saveFormula() {
     
     const imgSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgData)}`;
     
+    console.log('SVG with MathML created');
+    
+    // Send to parent window
     if (window.parent && window.parent !== window) {
       if (window.parent.receiveFormulaFromMathEditor) {
+        console.log('Calling parent function...');
         window.parent.receiveFormulaFromMathEditor(latex, imgSrc, encodedMathML);
+        field.setValue('');
       } else {
         console.error('Parent function not found!');
         alert('Error: Parent window function not available');
@@ -513,6 +509,9 @@ async function saveFormula() {
 
 // Cancel dialog
 function cancelDialog() {
+  const field = document.getElementById('mathlive-editor');
+  field.setValue('');
+  
   if (window.parent && window.parent.closeMathDialog) {
     window.parent.closeMathDialog();
   }

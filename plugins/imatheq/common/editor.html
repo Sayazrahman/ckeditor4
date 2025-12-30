@@ -1,232 +1,613 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+﻿<!DOCTYPE html>
+<html lang="en">
 <head>
-<title>iMathEQ | Online Mathematics Equation Editor</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<link rel="icon" href="icons/favicon.ico">
-<script type='text/javascript' charset = "utf-8" src='//www.imatheq.com/imatheq/com/imatheq/scripts/imatheqfunctions.js'></script>
-<!-- <script type='text/javascript' charset = "utf-8" src='https://wilp.wheebox.com/WET-2/assest/js/tinymce/js/tinymce/plugins/imatheq/common/assest/imatheqfunctions.js'></script -->
-<script type="text/javascript" charset = "utf-8" >
-  var iMatheq_editor;
-  var lang = getParameterByName('lang');
-    var lskey = "";
-  if(!lang) lang = "en";	//'en','zh-cn','zh-tw','nn','de','fr','fi','nl','sv','pl','it','es','tr','da','pt','lv','ko'
-  var ime_current_equation_id = "";
-  var iMathEQ_clearing = false;
-  
-  window.onload=function () {
-	  iMatheq_editor = org.imatheq.formulaeditor.createEditor(document.getElementById('myEditor'), 
-			  lskey, lang);
+<meta charset="UTF-8" />
+<title>Math Formula Editor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- MathLive -->
+<script src="https://cdn.jsdelivr.net/npm/mathlive/dist/mathlive.min.js"></script>
+
+<!-- MathJax -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [["\\(", "\\)"], ["$", "$"]],
+    displayMath: [["\\[", "\\]"], ["$$", "$$"]],
+    packages: ["base", "ams", "noerrors", "noundefined", "autoload"],
+  },
+  svg: { fontCache: "global" },
+  startup: {
+    ready: () => {
+      MathJax.startup.defaultReady();
+    }
   }
-  
-  function ajax_call(input) {	//url, values, callback, errorHandler) {
-      var request = new XMLHttpRequest();
-      request.onreadystatechange = function() {
-        if (request.readyState == 4) {
-          if (request.status == 200) {			
-			try {
-			  var data = JSON.parse(this.responseText);
-			  input.success(data); 
-			} catch (err) {
-			  input.error(this,request.status,err);
-			}
-          } 
-          else {
-			input.error(this, request.status, err);
-          }
-        } 
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg-full.js" async></script>
+
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: white;
+    padding: 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    background: #6b4c7a;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    margin: -20px -20px 20px -20px;
+  }
+
+  .header h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .content {
+    flex: 1;
+    overflow: auto;
+  }
+
+  #math-toolbar {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 8px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .math-btn {
+    width: 36px;
+    height: 32px;
+    border: 1px solid #999;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    border-radius: 3px;
+    transition: background 0.2s;
+  }
+
+  .math-btn:hover {
+    background: #e9ecef;
+  }
+
+  #mathlive-editor {
+    width: 100%;
+    min-height: 150px;
+    font-size: 20px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    background: white;
+    margin-bottom: 15px;
+  }
+
+  .latex-preview-container {
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    margin-bottom: 15px;
+  }
+
+  .latex-preview-container b {
+    font-size: 13px;
+    color: #555;
+  }
+
+  #latex-preview {
+    font-size: 12px;
+    margin-top: 5px;
+    color: #222;
+    word-wrap: break-word;
+  }
+
+  .export-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  .export-btn, #math-clear {
+    padding: 8px 12px;
+    border: 1px solid;
+    background: white;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .export-btn:hover, #math-clear:hover {
+    background: #f8f9fa;
+  }
+
+  .export-btn[data-type="mathml"] {
+    border-color: #007bff;
+    color: #007bff;
+  }
+
+  .export-btn[data-type="svg"] {
+    border-color: #28a745;
+    color: #28a745;
+  }
+
+  .export-btn[data-type="png"] {
+    border-color: #ffc107;
+    color: #856404;
+  }
+
+  #math-clear {
+    border-color: #dc3545;
+    color: #dc3545;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+  }
+
+  .btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .btn:hover {
+    opacity: 0.9;
+  }
+
+  .btn-cancel {
+    background: #6c757d;
+    color: white;
+  }
+
+  .btn-save {
+    background: #007bff;
+    color: white;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>Insert Mathematical Formula</h2>
+</div>
+
+<div class="content">
+  <!-- Toolbar -->
+  <div id="math-toolbar"></div>
+
+  <!-- MathLive Input Field -->
+  <math-field
+    id="mathlive-editor"
+    virtual-keyboard-mode="manual"
+    smart-fence="true"
+    keypress-sound="none"
+  ></math-field>
+
+</div>
+
+<div class="footer">
+  <button class="btn btn-cancel" onclick="cancelDialog()">Cancel</button>
+  <button class="btn btn-save" onclick="saveFormula()">Save</button>
+</div>
+
+<script>
+/* ============================
+   LATEX → MATHML / PNG
+   ============================ */
+
+function latexToMathML(latex) {
+  try {
+    if (window.MathJax && MathJax.tex2mml) {
+      return MathJax.tex2mml(latex);
+    }
+  } catch (e) {
+    console.warn("MathML conversion failed", e);
+  }
+  return `<math><mtext>${latex}</mtext></math>`;
+}
+
+function createFallbackImage(latex, canvas, ctx) {
+  const text = latex.length > 20 ? latex.substring(0, 20) + "..." : latex;
+
+  ctx.font = "16px serif";
+  const w = ctx.measureText(text).width;
+
+  canvas.width = w + 20;
+  canvas.height = 40;
+
+  ctx.fillStyle = "#f8f9fa";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = "#ccc";
+  ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#333";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+  return canvas.toDataURL("image/png");
+}
+
+async function latexToPNG(latex) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!window.MathJax || !MathJax.tex2svg) {
+        let attempts = 0;
+        while ((!window.MathJax || !MathJax.tex2svg) && attempts < 30) {
+          await new Promise(r => setTimeout(r, 100));
+          attempts++;
+        }
+        
+        if (!window.MathJax || !MathJax.tex2svg) {
+          return resolve(createFallbackPNG(latex));
+        }
+      }
+      const svg = MathJax.tex2svg(latex);
+      const svgElement = svg.querySelector('svg');
+      
+      if (!svgElement) {
+        console.error("No SVG element generated");
+        return resolve(createFallbackPNG(latex));
+      }
+      
+      // Get SVG dimensions
+      const bbox = svgElement.getBBox();
+      const width = Math.max(bbox.width, 100);
+      const height = Math.max(bbox.height, 40);
+      
+      // Create canvas with higher scale for better quality
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const scale = 4; // Increased scale for better quality
+      
+      canvas.width = (width + 40) * scale;
+      canvas.height = (height + 40) * scale;
+      
+      // White background
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Convert SVG to image
+      const svgString = new XMLSerializer().serializeToString(svgElement);
+      const img = new Image();
+      const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+      
+      img.onload = () => {
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, 20, 20, width, height);
+        
+        const dataUrl = canvas.toDataURL("image/png");
+
+        URL.revokeObjectURL(url);
+        resolve(dataUrl);
       };
+      
+      img.onerror = (err) => {
+        console.error("Image load failed:", err);
+        URL.revokeObjectURL(url);
+        resolve(createFallbackPNG(latex));
+      };
+      
+      img.src = url;
+      
+    } catch (error) {
+      console.error("PNG generation failed:", error);
+      resolve(createFallbackPNG(latex));
+    }
+  });
+}
 
-      request.open(input.type, input.url);
-      // This header tells the server how to interpret the body of the request.
-      request.setRequestHeader("Content-Type", 
-                               "application/x-www-form-urlencoded");
-	  request.responseType = "text";
-      // Encode the properties of the values object and send them as
-      // the body of the request.
-      request.send(this.encodeFormData(input.data));
+// Fallback PNG with text
+function createFallbackPNG(latex) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  
+  const fontSize = 20;
+  ctx.font = `${fontSize}px Arial`;
+  const text = latex.length > 30 ? latex.substring(0, 30) + "..." : latex;
+  const metrics = ctx.measureText(text);
+  const textWidth = metrics.width;
+  
+  canvas.width = textWidth + 40;
+  canvas.height = fontSize + 30;
+  
+  ctx.font = `${fontSize}px Arial`;
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.strokeStyle = "#ddd";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.fillStyle = "#000";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+  
+  return canvas.toDataURL("image/png");
+}
 
-	  //request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
-	  //request.send(JSON.stringify(input.data));
+/* ============================
+   INITIALIZE
+   ============================ */
+
+function initializeToolbar() {
+  const buttons = [
+    ["\\frac{#@}{#?}", "a/b"],
+    ["^{#?}", "x²"],
+    ["_{#?}", "x₁"],
+    ["\\sqrt{#?}", "√"],
+    ["\\sqrt[#@]{#?}", "ⁿ√"],
+    ["\\int_{#@}^{#?}", "∫"],
+    ["\\sum_{#@}^{#?}", "Σ"],
+    ["\\prod_{#@}^{#?}", "∏"],
+    ["\\lim_{#?}", "lim"],
+    ["\\sin", "sin"],
+    ["\\cos", "cos"],
+    ["\\tan", "tan"],
+    ["\\log_{#?}", "log"],
+    ["\\ln", "ln"],
+    ["\\infty", "∞"],
+    ["+", "+"],
+    ["-", "−"],
+    ["\\times", "×"],
+    ["\\div", "÷"],
+    ["=", "="],
+    ["\\neq", "≠"],
+    ["\\geq", "≥"],
+    ["\\leq", "≤"],
+    ["\\pi", "π"],
+    ["\\theta", "θ"],
+    ["\\alpha", "α"],
+    ["\\beta", "β"],
+    ["\\gamma", "γ"],
+    ["\\left|#?\\right|", "|x|"],
+    ["\\left(#?\\right)", "( )"],
+    ["\\left[#?\\right]", "[ ]"],
+    ["\\rightarrow", "→"],
+    ["\\Rightarrow", "⇒"],
+  ];
+
+  const toolbar = document.getElementById('math-toolbar');
+  toolbar.innerHTML = buttons
+    .map(([cmd, label]) => `
+      <button class="math-btn" data-command="${cmd}" type="button">
+        ${label}
+      </button>
+    `)
+    .join('');
+}
+
+function setupEvents() {
+  const field = document.getElementById('mathlive-editor');
+  const preview = document.getElementById('latex-preview');
+
+  // Live preview
+  function updatePreview() {
+    preview.textContent = field.getValue('latex') || '(empty)';
   }
+  field.addEventListener('input', updatePreview);
 
-  function encodeFormData(data) {
-      var pairs = [];
-      var regexp = /%20/g; // A regular expression to match an encoded space
+  // Toolbar buttons
+  document.querySelectorAll('.math-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cmd = btn.getAttribute('data-command');
+      if (!cmd) return;
+      field.focus();
+      field.insert(cmd);
+      setTimeout(updatePreview, 20);
+    });
+  });
 
-      for (var name in data) {
-        var value = data[name].toString();
-        // Create a name/value pair, but encode name and value first
-        // The global function encodeURIComponent does almost what we want,
-        // but it encodes spaces as %20 instead of as "+". We have to
-        // fix that with String.replace()
-        var pair = encodeURIComponent(name).replace(regexp,"+") + '=' +
-          encodeURIComponent(value).replace(regexp,"+");
-        pairs.push(pair);
+  // Export buttons
+  document.querySelectorAll('.export-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const type = btn.getAttribute('data-type');
+      const latex = field.getValue('latex');
+      if (!latex) return;
+
+      if (type === 'mathml') {
+        const mathml = latexToMathML(latex);
+        copyToClipboard(mathml, 'MathML');
       }
 
-      // Concatenate all the name/value pairs, separating them with &
-      return pairs.join('&');
-  }
+      if (type === 'svg') {
+        try {
+          const svg = MathJax.tex2svg(latex);
+          const svgString = MathJax.startup.adaptor.outerHTML(svg);
+          copyToClipboard(svgString, 'SVG XML');
+        } catch (e) {
+          alert('SVG export failed: ' + e.message);
+        }
+      }
 
-  parentWin = window.opener ? window.opener : window.parent;;
+      if (type === 'png') {
+        const png = await latexToPNG(latex);
+        downloadImage(png, 'formula.png');
+      }
+    });
+  });
 
-  var setMathML_cnt = 0;
-  function setMathML(mml, iMathEQ_qid)
-  {
-	if(mml != "") {
-		ime_current_equation_id = iMathEQ_qid ? iMathEQ_qid : "";
-		if(iMatheq_editor || iMathEQ_clearing) {
-			iMatheq_editor.setMathML(mml);
-			setMathML_cnt = 0;
-		} else {
-			if(++setMathML_cnt >10) {
-				setMathML_cnt = 0;
-				return;
-			}
-			window.setTimeout(setMathML(mml, iMathEQ_qid), 200);
-		}
-	}
-  }
+  // Clear button
+  document.getElementById('math-clear').addEventListener('click', () => {
+    field.setValue('');
+    updatePreview();
+  });
+}
 
+// Set initial latex (called from parent)
+window.setInitialLatex = function(latex) {
+  const field = document.getElementById('mathlive-editor');
+  const preview = document.getElementById('latex-preview');
+  field.setValue(latex);
+  preview.textContent = latex;
+};
 
-  function iMathEQ_SaveEquation()
-  {
-    try {
-		var mml = iMatheq_editor.getMathML()
-		var arrmml = mml.split(/(?<=>)|(?=<)/);
-		if(arrmml && arrmml.length == 3 && arrmml[1] == "<mrow/>") {
-			//alert("There is no equation to save.");
-			return;
-		}
-		var imagedata = iMatheq_editor.getImage();
-		var mathml = encodeURIComponent(mml);
-		//var imagedata = iMatheq_editor.getImage();
-		//var mathml = encodeURIComponent(iMatheq_editor.getMathML());
-		var alttext = iMatheq_editor.getAltText();
-		if(parentWin._imatheq_conf_image_format == "base64") {
-			parentWin.iMathEQ_SaveImageResult("<img imatheq-mml=\""  
-				+ mathml + "\" src=\"" + imagedata + "\"/>");
-			if(window.opener) {
-				window.close();
-			} else {
-				parentWin.imatheq_closeModalWindow();
-			}
-		} else {	//png, save image to server
-			var href = window.location.href;
-			var arr = href.split("/");
-			//var url = parentWin._imatheq_conf_save_image_api;
-			var url = parentWin._imatheq_conf_save_image_api + 
-				"?action=save_equation_image&lsk=" + encodeURIComponent(lskey) + 
-				"&dm=" + 
-				arr[2].replace(":", "_") + "&iMathEQ_qid=" + ime_current_equation_id;
-			ajax_call({
-				url: url,
-	  			type: "post",
-	  			dataType: "json",	//receiving data
-	  			data: { 
-	  			  action: "save_equation_image",
-	  			  lsk: lskey,
-				  dm: arr[2].replace(":", "_"),
-				  iMathEQ_qid: ime_current_equation_id,
-				  //image_data: encodeURIComponent(imagedata)
-				  image_data: imagedata
-	  			},
-	  			contentType: 'application/json',	//sending data
-	  			success: function (data) {
-					if(data && data["error"] !== undefined) {
-						alert(decodeURIComponent(data["error"]));
-					/*} else if(data && data.substring(0,6) == "error:") {
-						alert(data);*/
-					} else {
-						var ret_url = parentWin._imatheq_conf_image_url;
-						var rnd_str = Math.random().toString(16);
-						if(parentWin._imatheq_conf_image_url_type == "api") {
-							ret_url += "?iMathEQ_qid=" + data["iMathEQ_qid"] + 
-							"&r=" + rnd_str;
-						} else {						
-							if(ret_url[ret_url.length-1] != "/") ret_url += "/";
-							ret_url += data["iMathEQ_qid"] + ".png?iMathEQ_qid=" +
-							data["iMathEQ_qid"] + "&r=" + rnd_str;
-						}
-						parentWin.iMathEQ_SaveImageResult("<img alt=\"" + alttext + 
-							"\" imatheq-mml=\""  
-							+ mathml + "\" src=\"" + ret_url + "\"/>");
-						if(window.opener) {
-							window.close();
-						} else {
-							parentWin.imatheq_closeModalWindow();
-						}
-					}
-	  			},
-	  			error:function(data,status,er) {
-					if(data.responseText == "") {
-						alert("error: " + decodeURIComponent(data.responseText) + 
-							", status: " + status + ", error:"+er);
-					} else {
-						alert(decodeURIComponent(data.responseText));
-					}
-	  			}
-			});
-		}
+// Save formula
+
+var parentWin = window.opener || window.parent;
+
+async function saveFormula() {
+  try {
+    const field = document.getElementById('mathlive-editor');
+    if (!field) {
+      alert("Math editor not found");
+      return;
     }
-    catch (err) {
-		alert("Error: "+err);
-	}
+
+    const latex = field.getValue('latex');
+    if (!latex || !latex.trim()) {
+      alert("There is no equation to save.");
+      return;
+    }
+
+    const mathML = latexToMathML(latex);
+    const encodedMathML = encodeURIComponent(mathML);
+
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <foreignObject width="100%" height="100%">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            ${mathML}
+          </math>
+        </foreignObject>
+      </svg>
+    `;
+
+    const imageData =
+      "data:image/svg+xml;base64," +
+      btoa(unescape(encodeURIComponent(svg)));
+
+    const altText = latex;
+
+    if (parentWin._imatheq_conf_image_format === "base64") {
+      parentWin.iMathEQ_SaveImageResult(
+        `<img alt="${altText}" imatheq-mml="${encodedMathML}" src="${imageData}" />`
+      );
+
+      if (window.opener) {
+        window.close();
+      } else {
+        parentWin.imatheq_closeModalWindow();
+      }
+      return;
+    }
+
+    alert("Non-base64 image save is not configured yet.");
+  } catch (err) {
+    alert("Error: " + err.message);
   }
+}
+
+
+
+/* async function saveFormula() {
+  const field = document.getElementById('mathlive-editor');
+  const latex = field.getValue('latex');
   
-  function getImage()
-  {
-  	var imagedata = iMatheq_editor.getImage();
-    try {
-		var mathml = encodeURIComponent(iMatheq_editor.getMathML());
-		var img = iMatheq_editor.getImage();
-		parentWin.iMathEQ_SaveImageResult("<img imatheq-mml=\""  
-				+ mathml + "\" src=\"" + img + "\"/>");
-		if(window.opener) {
-			window.close();
-		} else {
-			parentWin.imatheq_closeModalWindow();
-		}
+  if (!latex.trim()) {
+    alert('Please enter a formula first!');
+    return;
+  }
+
+  try {
+    
+    const mathML = latexToMathML(latex);
+    const encodedMathML = encodeURIComponent(mathML);
+    
+    const svgData = `<svg xmlns="http://www.w3.org/2000/svg">
+      <foreignObject x="0" y="0" width="100%" height="100%">
+        <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">${mathML}</math>
+      </foreignObject>
+    </svg>`;
+    
+    const imgSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgData)}`;
+    
+    if (window.parent && window.parent !== window) {
+      if (window.parent.receiveFormulaFromMathEditor) {
+        window.parent.receiveFormulaFromMathEditor(latex, imgSrc, encodedMathML);
+      } else {
+        console.error('Parent function not found!');
+        alert('Error: Parent window function not available');
+      }
+    } else {
+      console.error('No parent window found!');
+      alert('Error: Not running in iframe');
     }
-    catch (err) {}
+  } catch (error) {
+    console.error('Error saving formula:', error);
+    alert('Error generating formula: ' + error.message);
   }
+} */
 
-  var clearMathML_cnt = 0;
-  function clearMathML()
-  {
-	iMathEQ_clearing = true;
-	ime_current_equation_id = "";
-	if(iMatheq_editor) {
-		iMatheq_editor.clearMathML();
-		clearMathML_cnt = 0;
-		iMathEQ_clearing = false
-	} else {
-		if(++clearMathML_cnt >10) {
-			clearMathML_cnt = 0;
-			return;
-		}
-		window.setTimeout(clearMathML(), 200);
-	}
+// Cancel dialog
+function cancelDialog() {
+  if (window.parent && window.parent.closeMathDialog) {
+    window.parent.closeMathDialog();
   }
+}
 
-  function getParameterByName(name, url) {
-    if (!url) url = window.location.href;
-    name = name.replace(/[\[\]]/g, '\\$&');
-    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+// Utility functions
+function copyToClipboard(text, label) {
+  navigator.clipboard.writeText(text)
+    .then(() => alert(label + ' copied to clipboard!'))
+    .catch(() => {
+      prompt('Copy ' + label + ':', text);
+    });
+}
+
+function downloadImage(dataUrl, filename) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    cancelDialog();
+  } else if (e.key === 'Enter' && e.ctrlKey) {
+    saveFormula();
   }
+});
+
+// Initialize on load
+window.addEventListener('load', () => {
+  initializeToolbar();
+  setupEvents();
+});
 </script>
-</head>
-<body>
-	<div id="myEditor" class="imatheqvisibletextarea"></div>
-	<div style="margin:-20px 0 0 6px">
-	<input type="button" onclick="javascript:iMathEQ_SaveEquation()" value=Save>
-	</div>
+
 </body>
 </html>

@@ -231,7 +231,7 @@ a > img {
 .math-formula-img {
   cursor: pointer;
   vertical-align: middle;
-  max-height: 2.5em;
+  max-height: 3.5em;
   height: auto;
   width: auto;
   border: none;
