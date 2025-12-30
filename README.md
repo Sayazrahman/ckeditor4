@@ -1,39 +1,54 @@
-CKEditor 4
-==========
+# CKEditor Math Formula Integration
 
-Copyright (c) 2003-2018, CKSource - Frederico Knabben. All rights reserved.
-http://ckeditor.com - See LICENSE.md for license information.
+## File Changes
 
-CKEditor is a text editor to be used inside web pages. It's not a replacement
-for desktop text editors like Word or OpenOffice, but a component to be used as
-part of web applications and websites.
+### Modified Files
 
-## Documentation
+**1. index.html**
+- Location: `D:\ETS\ckeditor4\index.html`
+- Added CSS link for `contents.css`
+- Added math dialog overlay div
+- Added `mathformula` CKEditor plugin code
+- Added `receiveFormulaFromMathEditor()` function
+- Added click event handler for editing formulas
+- Added `closeMathDialog()` function
 
-The full editor documentation is available online at the following address:
-https://ckeditor.com/docs/ckeditor4/latest/
+### New Files
 
-## Installation
+**1. contents.css**
+- Location: `D:\ETS\ckeditor4\contents.css`
+- Contains styles for math dialog overlay and formula images
 
-Installing CKEditor is an easy task. Just follow these simple steps:
+**2. math-editor.html**
+- Location: `D:\ETS\ckeditor4\plugins\imatheq\common\math-editor.html`
+- Standalone MathLive editor loaded in iframe
 
- 1. **Download** the latest version from the CKEditor website:
-    http://ckeditor.com. You should have already completed this step, but be
-    sure you have the very latest version.
- 2. **Extract** (decompress) the downloaded file into the root of your website.
+## Integration Steps
 
-**Note:** CKEditor is by default installed in the `ckeditor` folder. You can
-place the files in whichever you want though.
+1. Replace your `index.html` with the modified version
+2. Create `contents.css` in the same directory as `index.html`
+3. Create `math-editor.html` at `plugins/imatheq/common/math-editor.html`
 
-## Checking Your Installation
+## File Structure
 
-The editor comes with a few sample pages that can be used to verify that
-installation proceeded properly. Take a look at the `samples` directory.
+```
+D:\ETS\ckeditor4\
+├── index.html              (MODIFIED)
+├── contents.css            (NEW)
+├── ckeditor.js             (UNCHANGED)
+└── plugins\
+    └── imatheq\
+        └── common\
+            └── math-editor.html    (NEW)
+```
 
-To test your installation, just call the following page at your website:
+## Changes Summary
 
-	http://<your site>/<CKEditor installation path>/samples/index.html
+**Modified: 1 file**
+- index.html
 
-For example:
+**Added: 2 files**
+- contents.css
+- plugins/imatheq/common/math-editor.html
 
-	http://www.example.com/ckeditor/samples/index.html
+**Total files changed: 3**
