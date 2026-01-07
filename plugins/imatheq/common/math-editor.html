@@ -19,7 +19,6 @@ window.MathJax = {
   svg: { fontCache: "global" },
   startup: {
     ready: () => {
-      console.log("MathJax ready");
       MathJax.startup.defaultReady();
     }
   }
@@ -36,149 +35,135 @@ window.MathJax = {
 
   body {
     font-family: Arial, sans-serif;
-    background: white;
-    padding: 20px;
+    background: #f5f5f5;
     height: 100vh;
     display: flex;
     flex-direction: column;
   }
 
-  .header {
-    background: #6b4c7a;
-    color: white;
-    padding: 15px 20px;
-    border-radius: 8px 8px 0 0;
-    margin: -20px -20px 20px -20px;
-  }
-
-  .header h2 {
-    margin: 0;
-    font-size: 18px;
-  }
-
-  .content {
-    flex: 1;
-    overflow: auto;
-  }
-
-  #math-toolbar {
-    background: #f5f5f5;
-    border: 1px solid #ccc;
-    padding: 4px;
-    margin-bottom: 10px;
-    border-radius: 4px;
+  .symbol-toolbar {
+    background: #e8e8e8;
+    border-bottom: 1px solid #ccc;
+    padding: 5px 10px;
     display: flex;
-    flex-wrap: wrap;
-    gap: 1px;
+    align-items: center;
+    gap: 3px;
   }
 
-  .math-btn {
-    width: 28px;
+  .toolbar-btn {
+    width: 32px;
     height: 28px;
-    border: 1px solid #bbb;
-    background: linear-gradient(to bottom, #fff 0%, #f0f0f0 100%);
+    border: 1px solid #aaa;
+    background: white;
     cursor: pointer;
     font-size: 14px;
     border-radius: 2px;
-    transition: all 0.1s;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+    transition: all 0.1s;
   }
 
-  .math-btn:hover {
-    background: linear-gradient(to bottom, #fff 0%, #e5e5e5 100%);
-    border-color: #999;
+  .toolbar-btn:hover {
+    background: #e3f2fd;
+    border-color: #2196F3;
   }
 
-  .math-btn:active {
-    background: #e0e0e0;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  .toolbar-btn.active {
+    background: #bbdefb;
+    border-color: #2196F3;
+  }
+
+  .symbol-palette {
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    min-height: 120px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .symbol-palette.hidden {
+    display: none;
+  }
+
+  .symbol-btn {
+    min-width: 36px;
+    height: 36px;
+    border: 1px solid #bbb;
+    background: white;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    transition: all 0.1s;
+  }
+
+  .symbol-btn:hover {
+    background: #e3f2fd;
+    border-color: #2196F3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .editor-container {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    overflow: auto;
   }
 
   #mathlive-editor {
     width: 100%;
-    min-height: 150px;
-    font-size: 20px;
+    min-height: 400px;
+    font-size: 24px;
     border: 2px solid #ddd;
-    border-radius: 6px;
-    padding: 15px;
-    background: white;
-    margin-bottom: 15px;
-  }
-
-  .latex-preview-container {
-    padding: 10px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
     border-radius: 4px;
-    margin-bottom: 15px;
+    padding: 20px;
+    background: white;
   }
 
-  .latex-preview-container b {
-    font-size: 13px;
-    color: #555;
-  }
-
-  #latex-preview {
-    font-size: 12px;
-    margin-top: 5px;
-    color: #222;
-    word-wrap: break-word;
+  .bottom-toolbar {
+    background: white;
+    border-top: 1px solid #ddd;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .export-buttons {
     display: flex;
-    flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 15px;
   }
 
-  .export-btn, #math-clear {
-    padding: 8px 12px;
-    border: 1px solid;
+  .export-btn {
+    padding: 6px 16px;
+    border: 1px solid #999;
     background: white;
-    border-radius: 4px;
-    font-size: 12px;
+    border-radius: 3px;
+    font-size: 13px;
     cursor: pointer;
     transition: background 0.2s;
   }
 
-  .export-btn:hover, #math-clear:hover {
-    background: #f8f9fa;
+  .export-btn:hover {
+    background: #f0f0f0;
   }
 
-  .export-btn[data-type="mathml"] {
-    border-color: #007bff;
-    color: #007bff;
-  }
-
-  .export-btn[data-type="svg"] {
-    border-color: #28a745;
-    color: #28a745;
-  }
-
-  .export-btn[data-type="png"] {
-    border-color: #ffc107;
-    color: #856404;
-  }
-
-  #math-clear {
-    border-color: #dc3545;
-    color: #dc3545;
-  }
-
-  .footer {
+  .action-buttons {
     display: flex;
-    justify-content: flex-end;
     gap: 10px;
-    padding-top: 15px;
-    border-top: 1px solid #e9ecef;
   }
 
   .btn {
-    padding: 10px 24px;
+    padding: 8px 24px;
     border: none;
     border-radius: 4px;
     font-size: 14px;
@@ -204,15 +189,263 @@ window.MathJax = {
 
 <body>
 
-<div class="header">
-  <h2>Insert Mathematical Formula</h2>
+<!-- Symbol Category Toolbar -->
+<div class="symbol-toolbar">
+  <button class="toolbar-btn active" onclick="showPalette('general')" title="General Symbols">⊞</button>
+  <button class="toolbar-btn" onclick="showPalette('scripts')" title="Subscript/Superscript">x²</button>
+  <button class="toolbar-btn" onclick="showPalette('arrows')" title="Arrows">↔</button>
+  <button class="toolbar-btn" onclick="showPalette('relations')" title="Relations">≤</button>
+  <button class="toolbar-btn" onclick="showPalette('greek')" title="Greek">αβ</button>
+  <button class="toolbar-btn" onclick="showPalette('matrices')" title="Matrices">⊞</button>
+  <button class="toolbar-btn" onclick="showPalette('brackets')" title="Brackets">[]</button>
+  <button class="toolbar-btn" onclick="showPalette('calculus')" title="Calculus">∑∫</button>
+  <button class="toolbar-btn" onclick="showPalette('functions')" title="Functions">sin</button>
+  <button class="toolbar-btn" onclick="showPalette('functions2')" title="More Functions">sinh</button>
+  <button class="toolbar-btn" onclick="showPalette('misc')" title="Misc">✂</button>
 </div>
 
-<div class="content">
-  <!-- Toolbar -->
-  <div id="math-toolbar"></div>
+<!-- Symbol Palettes -->
+<div id="palette-general" class="symbol-palette">
+  <button class="symbol-btn" data-latex="\frac{#@}{#?}">a/b</button>
+  <button class="symbol-btn" data-latex="\sqrt{#?}">√</button>
+  <button class="symbol-btn" data-latex="\sqrt[#@]{#?}">ⁿ√</button>
+  <button class="symbol-btn" data-latex="^{#?}">x²</button>
+  <button class="symbol-btn" data-latex="_{#?}">x₁</button>
+  <button class="symbol-btn" data-latex="{}^{#@}_{#?}">ⁿx₁</button>
+  <button class="symbol-btn" data-latex="\left(#?\right)">()</button>
+  <button class="symbol-btn" data-latex="\left[#?\right]">[]</button>
+  <button class="symbol-btn" data-latex="\left\{#?\right\}">{}</button>
+  <button class="symbol-btn" data-latex="+">+</button>
+  <button class="symbol-btn" data-latex="-">−</button>
+  <button class="symbol-btn" data-latex="\times">×</button>
+  <button class="symbol-btn" data-latex="\div">÷</button>
+  <button class="symbol-btn" data-latex="\pm">±</button>
+  <button class="symbol-btn" data-latex="=">=</button>
+  <button class="symbol-btn" data-latex="\neq">≠</button>
+  <button class="symbol-btn" data-latex="\geq">≥</button>
+  <button class="symbol-btn" data-latex="\leq">≤</button>
+  <button class="symbol-btn" data-latex="\pi">π</button>
+  <button class="symbol-btn" data-latex="\alpha">α</button>
+  <button class="symbol-btn" data-latex="\left|#?\right|">||</button>
+  <button class="symbol-btn" data-latex="\cancel{#?}">⧸</button>
+  <button class="symbol-btn" data-latex="\backslash">\</button>
+  <button class="symbol-btn" data-latex="\infty">∞</button>
+  <button class="symbol-btn" data-latex="\beta">β</button>
+  <button class="symbol-btn" data-latex="\circ">∘</button>
+  <button class="symbol-btn" data-latex="\emptyset">∅</button>
+  <button class="symbol-btn" data-latex="\theta">θ</button>
+</div>
 
-  <!-- MathLive Input Field -->
+<div id="palette-scripts" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="^{#?}">x²</button>
+  <button class="symbol-btn" data-latex="_{#?}">x₁</button>
+  <button class="symbol-btn" data-latex="{}^{#@}_{#?}">ⁿx₁</button>
+  <button class="symbol-btn" data-latex="x^{#?}_{#?}">x²₁</button>
+</div>
+
+<div id="palette-functions" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="\ln">ln</button>
+  <button class="symbol-btn" data-latex="\log">log</button>
+  <button class="symbol-btn" data-latex="\log_{10}">log₁₀</button>
+  <button class="symbol-btn" data-latex="\sin">sin</button>
+  <button class="symbol-btn" data-latex="\tan">tan</button>
+  <button class="symbol-btn" data-latex="\sec">sec</button>
+  <button class="symbol-btn" data-latex="\sin^{-1}">sin⁻¹</button>
+  <button class="symbol-btn" data-latex="\tan^{-1}">tan⁻¹</button>
+  <button class="symbol-btn" data-latex="\sec^{-1}">sec⁻¹</button>
+  <button class="symbol-btn" data-latex="\arcsin">arcsin</button>
+  <button class="symbol-btn" data-latex="\arctan">arctan</button>
+  <button class="symbol-btn" data-latex="\arcsec">arcsec</button>
+  <button class="symbol-btn" data-latex="\exp">exp</button>
+  <button class="symbol-btn" data-latex="\cos">cos</button>
+  <button class="symbol-btn" data-latex="\cot">cot</button>
+  <button class="symbol-btn" data-latex="\csc">csc</button>
+  <button class="symbol-btn" data-latex="\cos^{-1}">cos⁻¹</button>
+  <button class="symbol-btn" data-latex="\cot^{-1}">cot⁻¹</button>
+  <button class="symbol-btn" data-latex="\csc^{-1}">csc⁻¹</button>
+  <button class="symbol-btn" data-latex="\arccos">arccos</button>
+  <button class="symbol-btn" data-latex="\arccot">arccot</button>
+  <button class="symbol-btn" data-latex="\arccsc">arccsc</button>
+</div>
+
+<div id="palette-functions2" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="\sinh">sinh</button>
+  <button class="symbol-btn" data-latex="\cosh">cosh</button>
+  <button class="symbol-btn" data-latex="\tanh">tanh</button>
+  <button class="symbol-btn" data-latex="\coth">coth</button>
+  <button class="symbol-btn" data-latex="\sinh^{-1}">sinh⁻¹</button>
+  <button class="symbol-btn" data-latex="\cosh^{-1}">cosh⁻¹</button>
+  <button class="symbol-btn" data-latex="\tanh^{-1}">tanh⁻¹</button>
+  <button class="symbol-btn" data-latex="\coth^{-1}">coth⁻¹</button>
+</div>
+
+<div id="palette-arrows" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="\uparrow">↑</button>
+  <button class="symbol-btn" data-latex="\downarrow">↓</button>
+  <button class="symbol-btn" data-latex="\updownarrow">↕</button>
+  <button class="symbol-btn" data-latex="\leftarrow">←</button>
+  <button class="symbol-btn" data-latex="\rightarrow">→</button>
+  <button class="symbol-btn" data-latex="\leftrightarrow">↔</button>
+  <button class="symbol-btn" data-latex="\Leftarrow">⇐</button>
+  <button class="symbol-btn" data-latex="\Rightarrow">⇒</button>
+  <button class="symbol-btn" data-latex="\Leftrightarrow">⇔</button>
+  <button class="symbol-btn" data-latex="\nwarrow">↖</button>
+  <button class="symbol-btn" data-latex="\nearrow">↗</button>
+  <button class="symbol-btn" data-latex="\searrow">↘</button>
+  <button class="symbol-btn" data-latex="\swarrow">↙</button>
+  <button class="symbol-btn" data-latex="\Uparrow">⇑</button>
+  <button class="symbol-btn" data-latex="\Downarrow">⇓</button>
+  <button class="symbol-btn" data-latex="\Updownarrow">⇕</button>
+  <button class="symbol-btn" data-latex="\mapsto">↦</button>
+  <button class="symbol-btn" data-latex="\hookleftarrow">↩</button>
+  <button class="symbol-btn" data-latex="\hookrightarrow">↪</button>
+</div>
+
+<div id="palette-relations" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="=">=</button>
+  <button class="symbol-btn" data-latex="\equiv">≡</button>
+  <button class="symbol-btn" data-latex="\neq">≠</button>
+  <button class="symbol-btn" data-latex="\not\equiv">≢</button>
+  <button class="symbol-btn" data-latex=">">></button>
+  <button class="symbol-btn" data-latex="<"><</button>
+  <button class="symbol-btn" data-latex="\geq">≥</button>
+  <button class="symbol-btn" data-latex="\leq">≤</button>
+  <button class="symbol-btn" data-latex="\gg">≫</button>
+  <button class="symbol-btn" data-latex="\ll">≪</button>
+  <button class="symbol-btn" data-latex="\sim">∼</button>
+  <button class="symbol-btn" data-latex="\approx">≈</button>
+  <button class="symbol-btn" data-latex="\cong">≅</button>
+  <button class="symbol-btn" data-latex="\propto">∝</button>
+  <button class="symbol-btn" data-latex="\perp">⊥</button>
+  <button class="symbol-btn" data-latex="\parallel">∥</button>
+</div>
+
+<div id="palette-greek" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="\alpha">α</button>
+  <button class="symbol-btn" data-latex="\beta">β</button>
+  <button class="symbol-btn" data-latex="\gamma">γ</button>
+  <button class="symbol-btn" data-latex="\delta">δ</button>
+  <button class="symbol-btn" data-latex="\epsilon">ε</button>
+  <button class="symbol-btn" data-latex="\varepsilon">ϵ</button>
+  <button class="symbol-btn" data-latex="\zeta">ζ</button>
+  <button class="symbol-btn" data-latex="\eta">η</button>
+  <button class="symbol-btn" data-latex="\theta">θ</button>
+  <button class="symbol-btn" data-latex="\vartheta">ϑ</button>
+  <button class="symbol-btn" data-latex="\iota">ι</button>
+  <button class="symbol-btn" data-latex="\kappa">κ</button>
+  <button class="symbol-btn" data-latex="\lambda">λ</button>
+  <button class="symbol-btn" data-latex="\mu">μ</button>
+  <button class="symbol-btn" data-latex="\nu">ν</button>
+  <button class="symbol-btn" data-latex="\xi">ξ</button>
+  <button class="symbol-btn" data-latex="\pi">π</button>
+  <button class="symbol-btn" data-latex="\rho">ρ</button>
+  <button class="symbol-btn" data-latex="\sigma">σ</button>
+  <button class="symbol-btn" data-latex="\tau">τ</button>
+  <button class="symbol-btn" data-latex="\upsilon">υ</button>
+  <button class="symbol-btn" data-latex="\phi">φ</button>
+  <button class="symbol-btn" data-latex="\varphi">ϕ</button>
+  <button class="symbol-btn" data-latex="\chi">χ</button>
+  <button class="symbol-btn" data-latex="\psi">ψ</button>
+  <button class="symbol-btn" data-latex="\omega">ω</button>
+  <button class="symbol-btn" data-latex="\Gamma">Γ</button>
+  <button class="symbol-btn" data-latex="\Delta">Δ</button>
+  <button class="symbol-btn" data-latex="\Theta">Θ</button>
+  <button class="symbol-btn" data-latex="\Lambda">Λ</button>
+  <button class="symbol-btn" data-latex="\Xi">Ξ</button>
+  <button class="symbol-btn" data-latex="\Pi">Π</button>
+  <button class="symbol-btn" data-latex="\Sigma">Σ</button>
+  <button class="symbol-btn" data-latex="\Phi">Φ</button>
+  <button class="symbol-btn" data-latex="\Psi">Ψ</button>
+  <button class="symbol-btn" data-latex="\Omega">Ω</button>
+</div>
+
+<div id="palette-matrices" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="\begin{matrix}#?&#?\\#?&#?\end{matrix}">2×2</button>
+  <button class="symbol-btn" data-latex="\begin{pmatrix}#?&#?\\#?&#?\end{pmatrix}">(2×2)</button>
+  <button class="symbol-btn" data-latex="\begin{bmatrix}#?&#?\\#?&#?\end{bmatrix}">[2×2]</button>
+  <button class="symbol-btn" data-latex="\begin{vmatrix}#?&#?\\#?&#?\end{vmatrix}">|2×2|</button>
+</div>
+
+<div id="palette-brackets" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="\left(#?\right)">()</button>
+  <button class="symbol-btn" data-latex="\left[#?\right]">[]</button>
+  <button class="symbol-btn" data-latex="\left\{#?\right\}">{}</button>
+  <button class="symbol-btn" data-latex="\left|#?\right|">||</button>
+  <button class="symbol-btn" data-latex="\left\|#?\right\|">∥∥</button>
+  <button class="symbol-btn" data-latex="\langle #?\rangle">⟨⟩</button>
+  <button class="symbol-btn" data-latex="\lfloor #?\rfloor">⌊⌋</button>
+  <button class="symbol-btn" data-latex="\lceil #?\rceil">⌈⌉</button>
+  <button class="symbol-btn" data-latex="(">(</button>
+  <button class="symbol-btn" data-latex=")">)</button>
+  <button class="symbol-btn" data-latex="[">[</button>
+  <button class="symbol-btn" data-latex="]">]</button>
+  <button class="symbol-btn" data-latex="\{">{</button>
+  <button class="symbol-btn" data-latex="\}">}</button>
+</div>
+
+<div id="palette-calculus" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="\int">∫</button>
+  <button class="symbol-btn" data-latex="\int_{#@}^{#?}">∫ᵃᵇ</button>
+  <button class="symbol-btn" data-latex="\iint">∬</button>
+  <button class="symbol-btn" data-latex="\iiint">∭</button>
+  <button class="symbol-btn" data-latex="\oint">∮</button>
+  <button class="symbol-btn" data-latex="\sum">Σ</button>
+  <button class="symbol-btn" data-latex="\sum_{#@}^{#?}">Σᵃᵇ</button>
+  <button class="symbol-btn" data-latex="\prod">∏</button>
+  <button class="symbol-btn" data-latex="\prod_{#@}^{#?}">∏ᵃᵇ</button>
+  <button class="symbol-btn" data-latex="\coprod">∐</button>
+  <button class="symbol-btn" data-latex="\lim">lim</button>
+  <button class="symbol-btn" data-latex="\lim_{#?}">lim_</button>
+  <button class="symbol-btn" data-latex="\partial">∂</button>
+  <button class="symbol-btn" data-latex="\nabla">∇</button>
+  <button class="symbol-btn" data-latex="\infty">∞</button>
+</div>
+
+<div id="palette-misc" class="symbol-palette hidden">
+  <button class="symbol-btn" data-latex="+">+</button>
+  <button class="symbol-btn" data-latex="-">−</button>
+  <button class="symbol-btn" data-latex="\pm">±</button>
+  <button class="symbol-btn" data-latex="\mp">∓</button>
+  <button class="symbol-btn" data-latex="\times">×</button>
+  <button class="symbol-btn" data-latex="\cdot">·</button>
+  <button class="symbol-btn" data-latex="\div">÷</button>
+  <button class="symbol-btn" data-latex="/">/</button>
+  <button class="symbol-btn" data-latex="\ast">∗</button>
+  <button class="symbol-btn" data-latex="\circ">∘</button>
+  <button class="symbol-btn" data-latex="\bullet">•</button>
+  <button class="symbol-btn" data-latex="\oplus">⊕</button>
+  <button class="symbol-btn" data-latex="\ominus">⊖</button>
+  <button class="symbol-btn" data-latex="\otimes">⊗</button>
+  <button class="symbol-btn" data-latex="\oslash">⊘</button>
+  <button class="symbol-btn" data-latex="\odot">⊙</button>
+  <button class="symbol-btn" data-latex="\cup">∪</button>
+  <button class="symbol-btn" data-latex="\cap">∩</button>
+  <button class="symbol-btn" data-latex="\in">∈</button>
+  <button class="symbol-btn" data-latex="\notin">∉</button>
+  <button class="symbol-btn" data-latex="\ni">∋</button>
+  <button class="symbol-btn" data-latex="\subset">⊂</button>
+  <button class="symbol-btn" data-latex="\supset">⊃</button>
+  <button class="symbol-btn" data-latex="\subseteq">⊆</button>
+  <button class="symbol-btn" data-latex="\supseteq">⊇</button>
+  <button class="symbol-btn" data-latex="\emptyset">∅</button>
+  <button class="symbol-btn" data-latex="\forall">∀</button>
+  <button class="symbol-btn" data-latex="\exists">∃</button>
+  <button class="symbol-btn" data-latex="\nexists">∄</button>
+  <button class="symbol-btn" data-latex="\neg">¬</button>
+  <button class="symbol-btn" data-latex="\wedge">∧</button>
+  <button class="symbol-btn" data-latex="\vee">∨</button>
+  <button class="symbol-btn" data-latex="\angle">∠</button>
+  <button class="symbol-btn" data-latex="\degree">°</button>
+  <button class="symbol-btn" data-latex="\triangle">△</button>
+  <button class="symbol-btn" data-latex="\%">%</button>
+  <button class="symbol-btn" data-latex="!">!</button>
+  <button class="symbol-btn" data-latex="\cdots">⋯</button>
+  <button class="symbol-btn" data-latex="\vdots">⋮</button>
+  <button class="symbol-btn" data-latex="\ddots">⋱</button>
+</div>
+
+<!-- Editor Container -->
+<div class="editor-container">
   <math-field
     id="mathlive-editor"
     virtual-keyboard-mode="manual"
@@ -221,15 +454,44 @@ window.MathJax = {
   ></math-field>
 </div>
 
-<div class="footer">
-  <button class="btn btn-cancel" onclick="cancelDialog()">Cancel</button>
-  <button class="btn btn-save" onclick="saveFormula()">Save</button>
+<!-- Bottom Toolbar -->
+<div class="bottom-toolbar">
+  <div class="export-buttons">
+    <button class="export-btn" onclick="exportMathML()">MathML</button>
+    <button class="export-btn" onclick="exportSVG()">SVG</button>
+    <button class="export-btn" onclick="exportImage()">Image</button>
+  </div>
+  
+  <div class="action-buttons">
+    <button class="btn btn-cancel" onclick="cancelDialog()">Cancel</button>
+    <button class="btn btn-save" onclick="saveFormula()">Save</button>
+  </div>
 </div>
 
 <script>
-/* ============================
-   LATEX → MATHML / PNG
-   ============================ */
+let currentPalette = 'general';
+
+function showPalette(paletteName) {
+  // Remove active class from all toolbar buttons
+  document.querySelectorAll('.toolbar-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Hide all palettes
+  document.querySelectorAll('.symbol-palette').forEach(palette => {
+    palette.classList.add('hidden');
+  });
+  
+  // Show selected palette
+  const palette = document.getElementById('palette-' + paletteName);
+  if (palette) {
+    palette.classList.remove('hidden');
+    currentPalette = paletteName;
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+  }
+}
 
 function latexToMathML(latex) {
   try {
@@ -242,300 +504,108 @@ function latexToMathML(latex) {
   return `<math><mtext>${latex}</mtext></math>`;
 }
 
-function createFallbackImage(latex, canvas, ctx) {
-  const text = latex.length > 20 ? latex.substring(0, 20) + "..." : latex;
+function setupEvents() {
+  const field = document.getElementById('mathlive-editor');
 
-  ctx.font = "16px serif";
-  const w = ctx.measureText(text).width;
-
-  canvas.width = w + 20;
-  canvas.height = 40;
-
-  ctx.fillStyle = "#f8f9fa";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.strokeStyle = "#ccc";
-  ctx.strokeRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "#333";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-
-  return canvas.toDataURL("image/png");
-}
-
-async function latexToPNG(latex) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      // Wait for MathJax to be ready
-      if (!window.MathJax || !MathJax.tex2svg) {
-        console.log("MathJax not ready yet, waiting...");
-        // Wait up to 3 seconds for MathJax
-        let attempts = 0;
-        while ((!window.MathJax || !MathJax.tex2svg) && attempts < 30) {
-          await new Promise(r => setTimeout(r, 100));
-          attempts++;
-        }
-        
-        if (!window.MathJax || !MathJax.tex2svg) {
-          console.log("MathJax failed to load, using text fallback");
-          return resolve(createFallbackPNG(latex));
-        }
-      }
-
-      console.log("Using MathJax to render formula");
-      
-      // Convert LaTeX to SVG using MathJax
-      const svg = MathJax.tex2svg(latex);
-      const svgElement = svg.querySelector('svg');
-      
-      if (!svgElement) {
-        console.error("No SVG element generated");
-        return resolve(createFallbackPNG(latex));
-      }
-      
-      // Get SVG dimensions
-      const bbox = svgElement.getBBox();
-      const width = Math.max(bbox.width, 100);
-      const height = Math.max(bbox.height, 40);
-      
-      // Create canvas with higher scale for better quality
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      const scale = 4; // Increased scale for better quality
-      
-      canvas.width = (width + 40) * scale;
-      canvas.height = (height + 40) * scale;
-      
-      // White background
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Convert SVG to image
-      const svgString = new XMLSerializer().serializeToString(svgElement);
-      const img = new Image();
-      const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(svgBlob);
-      
-      img.onload = () => {
-        ctx.scale(scale, scale);
-        ctx.drawImage(img, 20, 20, width, height);
-        
-        const dataUrl = canvas.toDataURL("image/png");
-        console.log("MathJax PNG generated, length:", dataUrl.length);
-        console.log("Canvas size:", canvas.width, "x", canvas.height);
-        URL.revokeObjectURL(url);
-        resolve(dataUrl);
-      };
-      
-      img.onerror = (err) => {
-        console.error("Image load failed:", err);
-        URL.revokeObjectURL(url);
-        resolve(createFallbackPNG(latex));
-      };
-      
-      img.src = url;
-      
-    } catch (error) {
-      console.error("PNG generation failed:", error);
-      resolve(createFallbackPNG(latex));
+  // Symbol button clicks
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('symbol-btn')) {
+      const latex = e.target.getAttribute('data-latex');
+      if (!latex) return;
+      field.focus();
+      field.insert(latex);
     }
   });
 }
 
-// Fallback PNG with text
-function createFallbackPNG(latex) {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  
-  const fontSize = 20;
-  ctx.font = `${fontSize}px Arial`;
-  const text = latex.length > 30 ? latex.substring(0, 30) + "..." : latex;
-  const metrics = ctx.measureText(text);
-  const textWidth = metrics.width;
-  
-  canvas.width = textWidth + 40;
-  canvas.height = fontSize + 30;
-  
-  ctx.font = `${fontSize}px Arial`;
-  ctx.fillStyle = "white";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  ctx.strokeStyle = "#ddd";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(0, 0, canvas.width, canvas.height);
-  
-  ctx.fillStyle = "#000";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-  
-  console.log("Fallback PNG generated");
-  return canvas.toDataURL("image/png");
-}
-
-/* ============================
-   INITIALIZE
-   ============================ */
-
-function initializeToolbar() {
-  const buttons = [
-    ["\\frac{a}{b}", "a/b"],
-    ["^{2}", "x²"],
-    ["_{i}", "xᵢ"],
-    ["\\sqrt{x}", "√"],
-    ["\\sqrt[3]{x}", "³√"],
-    ["\\sqrt[n]{x}", "ⁿ√"],
-    
-    ["\\sin", "sin"],
-    ["\\sinh", "sinh"],
-    ["\\cos", "cos"],
-    ["\\tan", "tan"],
-    ["\\log", "log"],
-    ["\\ln", "ln"],
-    ["\\lim", "lim"],
-    
-    ["\\int", "∫"],
-    ["\\iint", "∬"],
-    ["\\sum", "Σ"],
-    ["\\prod", "∏"],
-    
-    ["+", "+"],
-    ["-", "−"],
-    ["\\times", "×"],
-    ["\\div", "÷"],
-    ["\\pm", "±"],
-    ["=", "="],
-    ["\\neq", "≠"],
-    ["\\approx", "≈"],
-    ["\\geq", "≥"],
-    ["\\leq", "≤"],
-    
-    ["\\pi", "π"],
-    ["\\alpha", "α"],
-    ["\\beta", "β"],
-    ["\\gamma", "γ"],
-    ["\\theta", "θ"],
-    ["\\lambda", "λ"],
-    ["\\mu", "μ"],
-    ["\\sigma", "σ"],
-    ["\\omega", "ω"],
-    ["\\infty", "∞"],
-    
-    ["\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}", "( )"],
-    ["\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}", "[ ]"],
-    ["(x)", "()"],
-    ["[x]", "[]"],
-    ["\\{x\\}", "{}"],
-    ["|x|", "||"],
-    ["\\rightarrow", "→"],
-    ["\\Rightarrow", "⇒"],
-  ];
-
-  const toolbar = document.getElementById('math-toolbar');
-  toolbar.innerHTML = buttons
-    .map(([cmd, label]) => `<button class="math-btn" data-command="${cmd}" type="button">${label}</button>`)
-    .join('');
-}
-
-function setupEvents() {
+function exportMathML() {
   const field = document.getElementById('mathlive-editor');
-
-  // Toolbar buttons
-  document.querySelectorAll('.math-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const cmd = btn.getAttribute('data-command');
-      if (!cmd) return;
-      field.focus();
-      field.insert(cmd);
-    });
-  });
+  const latex = field.getValue('latex');
+  const mathml = latexToMathML(latex);
+  prompt('MathML (Ctrl+C to copy):', mathml);
 }
 
-// Set initial latex (called from parent)
+function exportSVG() {
+  const field = document.getElementById('mathlive-editor');
+  const latex = field.getValue('latex');
+  prompt('LaTeX (Ctrl+C to copy):', latex);
+}
+
+function exportImage() {
+  alert('Image export - Coming soon');
+}
+
+var parentWin = window.opener || window.parent;
+
+async function saveFormula() {
+  try {
+    const field = document.getElementById('mathlive-editor');
+    if (!field) {
+      alert("Math editor not found");
+      return;
+    }
+
+    const latex = field.getValue('latex');
+    if (!latex || !latex.trim()) {
+      alert("There is no equation to save.");
+      return;
+    }
+
+    const mathML = latexToMathML(latex);
+    const encodedMathML = encodeURIComponent(mathML);
+
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <foreignObject width="100%" height="100%">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            ${mathML}
+          </math>
+        </foreignObject>
+      </svg>
+    `;
+
+    const imageData =
+      "data:image/svg+xml;base64," +
+      btoa(unescape(encodeURIComponent(svg)));
+
+    const altText = latex;
+
+    if (parentWin._imatheq_conf_image_format === "base64") {
+      parentWin.iMathEQ_SaveImageResult(
+        `<img alt="${altText}" imatheq-mml="${encodedMathML}" src="${imageData}" />`
+      );
+
+      if (window.opener) {
+        window.close();
+      } else {
+        parentWin.imatheq_closeModalWindow();
+      }
+      return;
+    }
+
+    alert("Formula saved! LaTeX: " + latex);
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
+}
+
+function cancelDialog() {
+  if (window.parent && window.parent.closeMathDialog) {
+    window.parent.closeMathDialog();
+  } else if (window.opener) {
+    window.close();
+  } else {
+    if (confirm('Close the editor?')) {
+      window.close();
+    }
+  }
+}
+
 window.setInitialLatex = function(latex) {
   const field = document.getElementById('mathlive-editor');
   field.setValue(latex);
 };
 
-// Save formula
-async function saveFormula() {
-  const field = document.getElementById('mathlive-editor');
-  const latex = field.getValue('latex');
-  
-  if (!latex.trim()) {
-    alert('Please enter a formula first!');
-    return;
-  }
-
-  try {
-    console.log('Converting LaTeX to MathML...');
-    
-    // Convert LaTeX to MathML
-    const mathML = latexToMathML(latex);
-    const encodedMathML = encodeURIComponent(mathML);
-    
-    // Create SVG with embedded MathML - NO fixed viewBox, let it size naturally
-    const svgData = `<svg xmlns="http://www.w3.org/2000/svg">
-      <foreignObject x="0" y="0" width="100%" height="100%">
-        <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">${mathML}</math>
-      </foreignObject>
-    </svg>`;
-    
-    const imgSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgData)}`;
-    
-    console.log('SVG with MathML created');
-    
-    // Send to parent window
-    if (window.parent && window.parent !== window) {
-      if (window.parent.receiveFormulaFromMathEditor) {
-        console.log('Calling parent function...');
-        window.parent.receiveFormulaFromMathEditor(latex, imgSrc, encodedMathML);
-        field.setValue('');
-      } else {
-        console.error('Parent function not found!');
-        alert('Error: Parent window function not available');
-      }
-    } else {
-      console.error('No parent window found!');
-      alert('Error: Not running in iframe');
-    }
-  } catch (error) {
-    console.error('Error saving formula:', error);
-    alert('Error generating formula: ' + error.message);
-  }
-}
-
-// Cancel dialog
-function cancelDialog() {
-  const field = document.getElementById('mathlive-editor');
-  field.setValue('');
-  
-  if (window.parent && window.parent.closeMathDialog) {
-    window.parent.closeMathDialog();
-  }
-}
-
-// Utility functions
-function copyToClipboard(text, label) {
-  navigator.clipboard.writeText(text)
-    .then(() => alert(label + ' copied to clipboard!'))
-    .catch(() => {
-      prompt('Copy ' + label + ':', text);
-    });
-}
-
-function downloadImage(dataUrl, filename) {
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-// Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     cancelDialog();
@@ -544,10 +614,9 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Initialize on load
 window.addEventListener('load', () => {
-  initializeToolbar();
   setupEvents();
+  showPalette('general');
 });
 </script>
 
