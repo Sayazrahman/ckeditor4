@@ -18,8 +18,8 @@ function imatheq_getCommonPath() {
 
 var _imatheq_cur_fomula_img;
 var _imatheq_css_loaded = false;
-var _imatheq_iframe_width = 620;
-var _imatheq_iframe_height = 400;
+var _imatheq_iframe_width = 900;
+var _imatheq_iframe_height = 600;
 var _imatheq_cur_selection = null;
 var _imatheq_cur_range;
 var _imatheq_cur_element;
