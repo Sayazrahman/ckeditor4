@@ -572,7 +572,7 @@ ModalWindow.prototype.onRestore = function (forced) {
 		this.iframeDiv.style.width = _imatheq_iframe_width + "px";
 		this.iframeDiv.style.height = _imatheq_iframe_height + "px";
 		this.iframe.style.width = _imatheq_iframe_width + "px"; 
-		this.iframe.style.height = _imatheq_iframe_height + 30 + "px";
+		this.iframe.style.height = _imatheq_iframe_height + "px";
         this.state = 'restored';
 		this.iframeDiv.style.display = "";
 
