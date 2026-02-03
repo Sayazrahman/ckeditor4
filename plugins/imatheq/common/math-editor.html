@@ -14,9 +14,21 @@ window.MathJax = {
   tex: {
     inlineMath: [["\\(", "\\)"], ["$", "$"]],
     displayMath: [["\\[", "\\]"], ["$$", "$$"]],
-    packages: ["base", "ams", "noerrors", "noundefined", "autoload", "cancel"],
+    packages: ["base", "ams", "noerrors", "noundefined", "autoload", "cancel", "boldsymbol"],
+    macros: {
+      mathbb: ['{\\mathbb{#1}}', 1],
+      mathcal: ['{\\mathcal{#1}}', 1],
+      mathfrak: ['{\\mathfrak{#1}}', 1]
+    }
   },
-  svg: { fontCache: "global" },
+  svg: { 
+    fontCache: "global",
+    displayAlign: "left",
+    displayIndent: "0"
+  },
+  chtml: {
+    fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2'
+  },
   startup: {
     ready: () => {
       MathJax.startup.defaultReady();
@@ -859,8 +871,8 @@ window.MathJax = {
   <button class="symbol-btn" data-latex="\twoheadleftarrow">↞</button>
   <button class="symbol-btn" data-latex="\twoheadrightarrow">↠</button>
 
-<button class="symbol-btn" data-latex="\updownarrows">⇅</button>
-<button class="symbol-btn" data-latex="\downuparrows">⇵</button>
+<button class="symbol-btn" data-latex="\uparrow\downarrow">⇅</button>
+<button class="symbol-btn" data-latex="\downarrow\uparrow">⇵</button>
   <button class="symbol-btn" data-latex="\mapsfrom">↤</button>
   <button class="symbol-btn" data-latex="\mapsup">↥</button>
   <button class="symbol-btn" data-latex="\mapsdown">↧</button>

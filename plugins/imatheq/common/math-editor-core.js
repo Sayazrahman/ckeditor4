@@ -44,29 +44,23 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function latexToMathML(latex) {
-    try {
-       let processedLatex = latex;
-
-       // Ensure MathJax recognizes these commands
-       processedLatex = processedLatex.replace(
-         /\\mathbb\{([A-Z])\}/g,
-         "\\mathbb{$1}",
-       );
-       processedLatex = processedLatex.replace(
-         /\\mathcal\{([A-Z])\}/g,
-         "\\mathcal{$1}",
-       );
-       processedLatex = processedLatex.replace(
-         /\\mathfrak\{([A-Z])\}/g,
-         "\\mathfrak{$1}",
-       );
-    if (window.MathJax && MathJax.tex2mml) {
-return MathJax.tex2mml(processedLatex);
+  try {
+    if (!window.MathJax || !MathJax.tex2mml) {
+      console.warn("MathJax not ready");
+      return `<mtext>${latex}</mtext>`;
     }
+
+    // Don't process the latex - let MathJax handle it as-is
+    return MathJax.tex2mml(latex, {
+      display: false,
+      em: 16,
+      ex: 8,
+      containerWidth: 80 * 16,
+    });
   } catch (e) {
-    console.warn("MathML conversion failed", e);
+    console.error("MathML conversion failed", e, latex);
+    return `<mtext>${latex}</mtext>`;
   }
-  return `<mtext>${latex}</mtext>`;
 }
 function createFallbackImage(latex, canvas, ctx) {
   const text = latex.length > 20 ? latex.substring(0, 20) + "..." : latex;
@@ -371,9 +365,7 @@ function setupEvents() {
         /\\iiiint/g,
         "\\int\\!\\!\\!\\int\\!\\!\\!\\int\\!\\!\\!\\int",
         );
-        latex = latex.replace(/\\mathbb\{([A-Z])\}/g, "\\mathbb{$1}");
-        latex = latex.replace(/\\mathcal\{([A-Z])\}/g, "\\mathcal{$1}");
-        latex = latex.replace(/\\mathfrak\{([A-Z])\}/g, "\\mathfrak{$1}");
+    
       latex = latex.replace(/\\iiint/g, "\\int\\!\\!\\int\\!\\!\\int");
       latex = latex.replace(/\\iint/g, "\\int\\!\\!\\int");
       latex = latex.replace(/\\oiiint/g, "\\oint\\!\\!\\oint\\!\\!\\oint");
@@ -471,10 +463,7 @@ async function saveFormula() {
     }
 
     let latex = field.getValue("latex");
-      latex = latex.replace(/\\degree/g, "^\\circ");
-      latex = latex.replace(/\\mathbb\{([A-Z])\}/g, "\\mathbb{$1}");
-      latex = latex.replace(/\\mathcal\{([A-Z])\}/g, "\\mathcal{$1}");
-      latex = latex.replace(/\\mathfrak\{([A-Z])\}/g, "\\mathfrak{$1}");
+    latex = latex.replace(/\\degree/g, "^\\circ");
     latex = latex.replace(/\\bigsqcap/g, "\\sqcap");
     latex = latex.replace(/\\bigsqcup/g, "\\sqcup");
     latex = latex.replace(/\\biguplus/g, "\\uplus");
@@ -522,76 +511,57 @@ async function saveFormula() {
     const mathML = latexToMathML(latexForMathML);
     const encodedMathML = encodeURIComponent(mathML);
 
-    const tempContainer = document.createElement("div");
-    tempContainer.style.position = "absolute";
-    tempContainer.style.visibility = "hidden";
-    tempContainer.style.display = "inline-block";
-    tempContainer.style.fontSize = "";
-    tempContainer.style.maxWidth = "none";
-    tempContainer.style.whiteSpace = "nowrap";
-    tempContainer.innerHTML = `<math xmlns="http://www.w3.org/1998/Math/MathML">${mathML}</math>`;
-    document.body.appendChild(tempContainer);
+    const mjxContainer = MathJax.tex2svg(cleanLatex, { display: false });
+    const svgElement = mjxContainer.querySelector("svg");
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    if (!svgElement) {
+      alert("Failed to generate formula");
+      return;
+    }
 
-    if (window.MathJax && MathJax.typesetPromise) {
-      try {
-        await MathJax.typesetPromise([tempContainer]);
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      } catch (e) {
-        console.warn("MathJax typeset failed", e);
+    const tempDiv = document.createElement("div");
+    tempDiv.style.position = "absolute";
+    tempDiv.style.visibility = "hidden";
+    tempDiv.appendChild(mjxContainer);
+    document.body.appendChild(tempDiv);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const globalDefs = document.querySelector("svg defs");
+    if (globalDefs) {
+      const clonedDefs = globalDefs.cloneNode(true);
+      if (svgElement.firstChild) {
+        svgElement.insertBefore(clonedDefs, svgElement.firstChild);
+      } else {
+        svgElement.appendChild(clonedDefs);
       }
     }
 
-    const rect = tempContainer.getBoundingClientRect();
-    const mathElement = tempContainer.querySelector("math");
-    const mathRect = mathElement ? mathElement.getBoundingClientRect() : rect;
+    const width = svgElement.getAttribute("width");
+    const height = svgElement.getAttribute("height");
 
-    const measuredWidth = Math.max(
-      rect.width,
-      mathRect.width,
-      tempContainer.scrollWidth,
-      tempContainer.offsetWidth,
-    );
-    const measuredHeight = Math.max(
-      rect.height,
-      mathRect.height,
-      tempContainer.scrollHeight,
-      tempContainer.offsetHeight,
-    );
+    const actualWidth = width ? parseFloat(width.replace("ex", "")) * 8 : 30;
+    const actualHeight = height ? parseFloat(height.replace("ex", "")) * 8 : 30;
+
+    document.body.removeChild(tempDiv);
 
     const isMatrix =
-      cleanLatex.includes("\\begin{matrix}") ||
-      cleanLatex.includes("\\begin{pmatrix}") ||
-      cleanLatex.includes("\\begin{bmatrix}") ||
-      cleanLatex.includes("\\begin{Bmatrix}") ||
-      cleanLatex.includes("\\begin{vmatrix}") ||
-      cleanLatex.includes("\\begin{Vmatrix}");
+      cleanLatex.includes("\\begin{") && cleanLatex.includes("matrix}");
+    const padding = isMatrix ? 10 : 4;
+    const finalWidth = Math.ceil(actualWidth) + padding;
+    const finalHeight = Math.ceil(actualHeight) + padding;
 
-    const padding = isMatrix ? 40 : 8;
-    const minWidth = isMatrix ? 60 : 0;
-    const minHeight = isMatrix ? 40 : 0;
+    svgElement.setAttribute("width", finalWidth);
+    svgElement.setAttribute("height", finalHeight);
 
-    const actualWidth = Math.max(Math.ceil(measuredWidth) + padding, minWidth);
-    const actualHeight = Math.max(
-      Math.ceil(measuredHeight) + padding,
-      minHeight,
-    );
-
-    document.body.removeChild(tempContainer);
-
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${actualWidth}" height="${actualHeight}" viewBox="0 0 ${actualWidth} ${actualHeight}">
-  <foreignObject x="0" y="0" width="100%" height="100%">
-    <math xmlns="http://www.w3.org/1998/Math/MathML">${mathML}</math>
-  </foreignObject>
-</svg>`;
-
+    const svgString = new XMLSerializer().serializeToString(svgElement);
     const imageData =
-      "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
+      "data:image/svg+xml;base64," +
+      btoa(unescape(encodeURIComponent(svgString)));
 
     if (parentWin.iMathEQ_SaveImageResult) {
       parentWin.iMathEQ_SaveImageResult(
-        `<img class="math-formula-img" contenteditable="true" alt="${cleanLatex}" data-imath-latex="${cleanLatex}" imatheq-mml="${encodedMathML}" src="${imageData}" style="vertical-align: middle; height: ${actualHeight}px; width: ${actualWidth}px; border: none; padding: 2px; margin: 0px 2px; cursor: pointer; display: inline-block;"/>`,
+        `<img class="math-formula-img" contenteditable="true" alt="${cleanLatex}" data-imath-latex="${cleanLatex}" imatheq-mml="${encodedMathML}" src="${imageData}" style="vertical-align: middle; height: auto; width: auto; max-height: 2.5em; border: none; padding: 2px; margin: 0px 2px; cursor: pointer; display: inline-block;"/>`,
       );
 
       if (window.opener) {
@@ -610,7 +580,6 @@ async function saveFormula() {
     alert("Error: " + err.message);
   }
 }
-
 function cancelDialog() {
   const field = document.getElementById("mathlive-editor");
   field.setValue("");
