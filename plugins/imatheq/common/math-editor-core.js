@@ -12,6 +12,13 @@ function showPalette(paletteName) {
     palette.classList.remove("hidden");
     event.target.classList.add("active");
   }
+
+  requestAnimationFrame(() => {
+    const field = document.getElementById("mathlive-editor");
+    if (field) {
+      field.focus();
+    }
+  });
 }
 
 /* ============================
@@ -25,8 +32,10 @@ function updateEditorFont() {
 
   if (field) {
     field.style.fontSize = fontSize + "px";
-    // MathLive uses CSS variables for font settings
     field.style.setProperty("--font-family", fontFamily);
+    requestAnimationFrame(() => {
+      field.focus();
+    });
   }
 }
 
@@ -209,13 +218,20 @@ function insertMatrixFromDialog() {
   const field = document.getElementById("mathlive-editor");
   if (field) {
     field.focus();
-    field.insert(latex);
+    field.insert(latex, { feedback: false, scrollIntoView: true });
+    field.insert(latex, {
+      selectionMode: "placeholder",
+      feedback: false,
+      scrollIntoView: true,
+    });
+    requestAnimationFrame(() => {
+      field.focus();
+    });
   }
 
   closeMatrixDialog();
 }
 
-// Close dialog on outside click
 document.addEventListener("click", function (e) {
   const dialog = document.getElementById("matrixDialog");
   if (e.target === dialog) {
@@ -240,14 +256,21 @@ function insertMatrix(rows, cols, type) {
   latex += `\\end{${type}}`;
 
   field.focus();
-  field.insert(latex);
+  field.insert(latex, { feedback: false, scrollIntoView: true });
+  field.insert(latex, {
+    selectionMode: "placeholder",
+    feedback: false,
+    scrollIntoView: true,
+  });
+  requestAnimationFrame(() => {
+    field.focus();
+  });
 }
 
-// Initialize when page loads
 document.addEventListener("DOMContentLoaded", () => {
   initMatrixBuilder();
-  setupEvents(); // Your existing setup
 });
+
 async function latexToPNG(latex) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -343,63 +366,159 @@ function createFallbackPNG(latex) {
 
   return canvas.toDataURL("image/png");
 }
+async function renderCancelButton() {
+  await window.MathJax.startup.promise;
 
+  const cancelBtn = document.querySelector(
+    '.symbol-btn[data-latex="\\\\cancel{#?}"]',
+  );
+  if (cancelBtn) {
+    const svg = MathJax.tex2svg("\\cancel{\\square}", { display: false });
+    const svgElement = svg.querySelector("svg");
+    if (svgElement) {
+      svgElement.style.height = "20px";
+      svgElement.style.width = "auto";
+      cancelBtn.innerHTML = "";
+      cancelBtn.appendChild(svgElement);
+    }
+  }
+}
 function setupEvents() {
   const field = document.getElementById("mathlive-editor");
   const preview = document.getElementById("latex-preview");
+
+  let isInteractingWithUI = false;
+  let focusLockTimer = null;
+
+  function lockFocus() {
+    if (focusLockTimer) clearTimeout(focusLockTimer);
+    focusLockTimer = setTimeout(() => {
+      if (document.activeElement !== field && !isInteractingWithUI) {
+        field.focus();
+      }
+    }, 100);
+  }
+
+  if (field) {
+    field.addEventListener("focus", () => {
+      console.log("Math field focused");
+    });
+
+    field.addEventListener("keydown", (e) => {
+      if (e.key === " " || e.code === "Space") {
+        e.stopPropagation();
+        field.insert("\\; ");
+      }
+
+      if (e.key === "Backspace" || e.key === "Delete") {
+        // Lock focus aggressively after deletion
+        requestAnimationFrame(() => lockFocus());
+        setTimeout(() => lockFocus(), 50);
+        setTimeout(() => lockFocus(), 150);
+        setTimeout(() => lockFocus(), 300);
+      }
+    });
+
+    field.addEventListener("blur", (e) => {
+      if (isInteractingWithUI) return;
+      lockFocus();
+    });
+
+    setTimeout(() => {
+      field.focus();
+    }, 100);
+  }
+
+  // Track when user is interacting with toolbar/palette/dialog
+  document.addEventListener(
+    "mousedown",
+    (e) => {
+      const isUI =
+        e.target.closest(".symbol-toolbar") ||
+        e.target.closest(".symbol-palette") ||
+        e.target.closest(".matrix-dialog") ||
+        e.target.closest(".footer") ||
+        e.target.tagName === "SELECT" ||
+        e.target.tagName === "BUTTON";
+
+      if (isUI) {
+        isInteractingWithUI = true;
+        setTimeout(() => {
+          isInteractingWithUI = false;
+        }, 500);
+      }
+    },
+    true,
+  );
 
   function updatePreview() {
     if (preview) {
       preview.textContent = field.getValue("latex") || "(empty)";
     }
   }
-  field.addEventListener("input", updatePreview);
 
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".symbol-btn");
-    if (btn) {
-      let latex = btn.getAttribute("data-latex");
-      if (!latex) return;
-      latex = latex.replace(/#@/g, "#0");
-      latex = latex.replace(
-        /\\iiiint/g,
-        "\\int\\!\\!\\!\\int\\!\\!\\!\\int\\!\\!\\!\\int",
+  if (field) {
+    field.addEventListener("input", updatePreview);
+  }
+
+  document.addEventListener(
+    "mousedown",
+    (e) => {
+      const btn = e.target.closest(".symbol-btn");
+      if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        let latex = btn.getAttribute("data-latex");
+        if (!latex) return;
+
+        latex = latex.replace(/#@/g, "#0");
+        latex = latex.replace(
+          /\\iiiint/g,
+          "\\int\\!\\!\\!\\int\\!\\!\\!\\int\\!\\!\\!\\int",
         );
-    
-      latex = latex.replace(/\\iiint/g, "\\int\\!\\!\\int\\!\\!\\int");
-      latex = latex.replace(/\\iint/g, "\\int\\!\\!\\int");
-      latex = latex.replace(/\\oiiint/g, "\\oint\\!\\!\\oint\\!\\!\\oint");
-      latex = latex.replace(/\\oiint/g, "\\oint\\!\\!\\oint");
-      latex = latex.replace(/\\varointclockwise/g, "\\oint");
-      latex = latex.replace(/\\ointctrclockwise/g, "\\oint");
-      latex = latex.replace(/\\boxslash/g, "\\cancel{#?}");
-      latex = latex.replace(/\\bigsqcap/g, "\\sqcap");
-      latex = latex.replace(/\\bigsqcup/g, "\\sqcup");
-      latex = latex.replace(/\\biguplus/g, "\\uplus");
-      latex = latex.replace(/PRIME1/g, "'");
-      latex = latex.replace(/PRIME2/g, "''");
-      latex = latex.replace(/\\bigodot/g, "\\odot");
-      latex = latex.replace(/\\bigotimes/g, "\\otimes");
-      latex = latex.replace(/\\bigoplus/g, "\\oplus");
-      latex = latex.replace(/\\bigwedge/g, "\\wedge");
-      latex = latex.replace(/\\bigvee/g, "\\vee");
-      latex = latex.replace(/\\bigcap/g, "\\cap");
-      latex = latex.replace(/\\bigcup/g, "\\cup");
-      latex = latex.replace(/\\arcsec/g, "\\mathrm{arcsec}");
-      latex = latex.replace(/\\arccsc/g, "\\mathrm{arccsc}");
-      latex = latex.replace(/\\arccot/g, "\\mathrm{arccot}");
-      latex = latex.replace(/\\operatorname\{([^}]+)\}/g, "\\mathrm{$1}");
-      latex = latex.replace(/\\updownarrows/g, "\\uparrow\\!\\!\\!\\downarrow");
-      latex = latex.replace(/\\downuparrows/g, "\\downarrow\\!\\!\\!\\uparrow");
-      latex = latex.replace(/\\mapsfrom/g, "\\leftarrow\\!\\!|");
-      latex = latex.replace(/\\mapsup/g, "\\upharpoonleft");
-      latex = latex.replace(/\\mapsdown/g, "\\downharpoonleft");
-      latex = latex.replace(/\\napprox/g, "\\not\\approx");
-      latex = latex.replace(/\\iddots/g, "⋰");
-      field.focus();
-      field.insert(latex);
-    }
-  });
+        latex = latex.replace(/\\iiint/g, "\\int\\!\\!\\int\\!\\!\\int");
+        latex = latex.replace(/\\oiiint/g, "\\oint\\!\\!\\oint\\!\\!\\oint");
+        latex = latex.replace(/\\oiint/g, "\\oint\\!\\!\\oint");
+        latex = latex.replace(/\\boxslash/g, "\\cancel{#?}");
+        latex = latex.replace(/\\bigsqcap/g, "\\sqcap");
+        latex = latex.replace(/\\bigsqcup/g, "\\sqcup");
+        latex = latex.replace(/\\biguplus/g, "\\uplus");
+        latex = latex.replace(/PRIME1/g, "'");
+        latex = latex.replace(/PRIME2/g, "''");
+        latex = latex.replace(/\\bigodot/g, "\\odot");
+        latex = latex.replace(/\\bigotimes/g, "\\otimes");
+        latex = latex.replace(/\\bigoplus/g, "\\oplus");
+        latex = latex.replace(/\\bigwedge/g, "\\wedge");
+        latex = latex.replace(/\\bigvee/g, "\\vee");
+        latex = latex.replace(/\\bigcap/g, "\\cap");
+        latex = latex.replace(/\\bigcup/g, "\\cup");
+        latex = latex.replace(/\\arcsec/g, "\\mathrm{arcsec}");
+        latex = latex.replace(/\\arccsc/g, "\\mathrm{arccsc}");
+        latex = latex.replace(/\\arccot/g, "\\mathrm{arccot}");
+        latex = latex.replace(/\\operatorname\{([^}]+)\}/g, "\\mathrm{$1}");
+        latex = latex.replace(
+          /\\updownarrows/g,
+          "\\uparrow\\!\\!\\!\\downarrow",
+        );
+        latex = latex.replace(
+          /\\downuparrows/g,
+          "\\downarrow\\!\\!\\!\\uparrow",
+        );
+        latex = latex.replace(/\\mapsfrom/g, "\\leftarrow\\!\\!|");
+        latex = latex.replace(/\\napprox/g, "\\not\\approx");
+        latex = latex.replace(/\\iddots/g, "⋰");
+
+        const mathField = document.getElementById("mathlive-editor");
+        mathField.insert(latex);
+
+        requestAnimationFrame(() => {
+          mathField.focus();
+        });
+      }
+    },
+    true,
+  );
 
   document.querySelectorAll(".export-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -433,8 +552,71 @@ function setupEvents() {
   if (clearBtn) {
     clearBtn.addEventListener("click", () => {
       field.setValue("");
+      field.focus();
       updatePreview();
     });
+  }
+}
+async function renderComplexButtons() {
+  await window.MathJax.startup.promise;
+
+  // List of buttons with complex formulas to render
+  const complexButtons = [
+    {
+      selector: '[data-latex="\\\\int_{#@}^{#?} #? \\\\, d#?"]',
+      latex: "\\int_a^b f(x)\\,dx",
+    },
+    {
+      selector: '[data-latex="\\\\int #? \\\\, d#?"]',
+      latex: "\\int f(x)\\,dx",
+    },
+    {
+      selector: '[data-latex="\\\\iint #? \\\\, d#?"]',
+      latex: "\\iint f\\,dx",
+    },
+    {
+      selector: '[data-latex="\\\\iiint #? \\\\, d#?"]',
+      latex: "\\iiint f\\,dx",
+    },
+    {
+      selector: '[data-latex="\\\\oint #? \\\\, d#?"]',
+      latex: "\\oint f\\,dx",
+    },
+    {
+      selector: '[data-latex="\\\\iint_{#@}^{#?} #? \\\\, d#? \\\\, d#?"]',
+      latex: "\\iint f\\,dx\\,dy",
+    },
+    {
+      selector: '[data-latex="\\\\int #? \\\\, d#? \\\\, d#?"]',
+      latex: "\\int f\\,dx\\,dy",
+    },
+    {
+      selector: '[data-latex="\\\\iint_{#@}^{#?} #? \\\\, d#? \\\\, d#?"]',
+      latex: "\\iint f\\,dx\\,dy",
+    },
+    {
+      selector:
+        '[data-latex="\\\\iiint_{#@}^{#?} #? \\\\, d#? \\\\, d#? \\\\, d#?"]',
+      latex: "\\iiint f\\,dx\\,dy\\,dz",
+    },
+    {
+      selector: '[data-latex="\\\\oint_{#@}^{#?} #? \\\\, d#? \\\\, d#?"]',
+      latex: "\\oint f\\,dx\\,dy",
+    },
+  ];
+
+  for (const btn of complexButtons) {
+    const button = document.querySelector(`.symbol-btn${btn.selector}`);
+    if (button) {
+      const svg = MathJax.tex2svg(btn.latex, { display: false });
+      const svgElement = svg.querySelector("svg");
+      if (svgElement) {
+        svgElement.style.height = "20px";
+        svgElement.style.width = "auto";
+        button.innerHTML = "";
+        button.appendChild(svgElement);
+      }
+    }
   }
 }
 
@@ -446,8 +628,16 @@ window.setInitialLatex = function (latex) {
 
   if (field) {
     field.setValue(latex);
-    field.focus();
+
+    setTimeout(() => {
+      field.focus();
+
+      field.executeCommand("moveToMathfieldEnd");
+      field.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      field.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+    }, 300);
   }
+
   if (preview) {
     preview.textContent = latex;
   }
@@ -466,6 +656,11 @@ async function saveFormula() {
     latex = latex.replace(/\\degree/g, "^\\circ");
     latex = latex.replace(/\\bigsqcap/g, "\\sqcap");
     latex = latex.replace(/\\bigsqcup/g, "\\sqcup");
+    latex = latex.replace(/\\differentialD/g, "d");
+    latex = latex.replace(/\\varointclockwise/g, "∲");
+    latex = latex.replace(/\\ointctrclockwise/g, "∳");
+    latex = latex.replace(/\\diff/g, "d");
+    latex = latex.replace(/\\mathrm\{d\}/g, "d");
     latex = latex.replace(/\\biguplus/g, "\\uplus");
     latex = latex.replace(/\\bigodot/g, "\\odot");
     latex = latex.replace(/\\bigotimes/g, "\\otimes");
@@ -478,8 +673,8 @@ async function saveFormula() {
     latex = latex.replace(/\\mathrm\{arccsc\}/g, "\\arccsc");
     latex = latex.replace(/\\mathrm\{arccot\}/g, "\\arccot");
     latex = latex.replace(/\\mathrm\{([^}]+)\}/g, "\\operatorname{$1}");
-    latex = latex.replace(/\\upharpoonleft/g, "\\mapsup");
-    latex = latex.replace(/\\downharpoonleft/g, "\\mapsdown");
+    // latex = latex.replace(/\\upharpoonleft/g, "\\mapsup");
+    // latex = latex.replace(/\\downharpoonleft/g, "\\mapsdown");
     latex = latex.replace(/\\napprox/g, "\\not\\approx");
     latex = latex.replace(/\\iddots/g, "\\reflectbox{\\ddots}");
     latex = latex.replace(/PRIME1/g, "'");
@@ -511,7 +706,29 @@ async function saveFormula() {
     const mathML = latexToMathML(latexForMathML);
     const encodedMathML = encodeURIComponent(mathML);
 
-    const mjxContainer = MathJax.tex2svg(cleanLatex, { display: false });
+    // Detect CKEditor font size to render SVG at matching scale
+    let editorFontSize = 16; // default fallback
+    try {
+      // Try to get font size from the parent window's editor content
+      const parentBody = (
+        window.opener || window.parent
+      )?.document?.querySelector(
+        '.ck-content, .cke_editable, [contenteditable="true"]',
+      );
+      if (parentBody) {
+        const fs = parseFloat(window.getComputedStyle(parentBody).fontSize);
+        if (fs && fs > 0) editorFontSize = fs;
+      }
+    } catch (e) {}
+    // Render at 3x editor font size for sharpness, then scale down via CSS
+    const renderEm = editorFontSize * 3;
+    const renderEx = renderEm * 0.5;
+    const mjxContainer = MathJax.tex2svg(cleanLatex, {
+      display: false,
+      em: renderEm,
+      ex: renderEx,
+      containerWidth: 1200,
+    });
     const svgElement = mjxContainer.querySelector("svg");
 
     if (!svgElement) {
@@ -540,17 +757,29 @@ async function saveFormula() {
     const width = svgElement.getAttribute("width");
     const height = svgElement.getAttribute("height");
 
-    const actualWidth = width ? parseFloat(width.replace("ex", "")) * 8 : 30;
-    const actualHeight = height ? parseFloat(height.replace("ex", "")) * 8 : 30;
+    // Convert ex units to px using the render scale
+    const actualWidth = width
+      ? parseFloat(width.replace("ex", "")) * renderEx
+      : 30;
+    const actualHeight = height
+      ? parseFloat(height.replace("ex", "")) * renderEx
+      : 30;
 
     document.body.removeChild(tempDiv);
 
-    const isMatrix =
-      cleanLatex.includes("\\begin{") && cleanLatex.includes("matrix}");
-    const padding = isMatrix ? 10 : 4;
+    const padding = 4;
     const finalWidth = Math.ceil(actualWidth) + padding;
     const finalHeight = Math.ceil(actualHeight) + padding;
 
+    // Preserve viewBox so SVG scales cleanly when CSS resizes the img
+    if (!svgElement.getAttribute("viewBox")) {
+      const vbWidth = svgElement.getAttribute("width") || finalWidth;
+      const vbHeight = svgElement.getAttribute("height") || finalHeight;
+      svgElement.setAttribute(
+        "viewBox",
+        `0 0 ${parseFloat(vbWidth)} ${parseFloat(vbHeight)}`,
+      );
+    }
     svgElement.setAttribute("width", finalWidth);
     svgElement.setAttribute("height", finalHeight);
 
@@ -560,8 +789,15 @@ async function saveFormula() {
       btoa(unescape(encodeURIComponent(svgString)));
 
     if (parentWin.iMathEQ_SaveImageResult) {
+      const isMatrix =
+        cleanLatex.includes("\\begin{") && cleanLatex.includes("matrix}");
+      // height:1.8em makes the formula scale with the surrounding text font size
+      const imgStyle = isMatrix
+        ? "vertical-align: middle; height: auto; width: auto; max-height: 5.5em; border: none; padding: 2px; margin: 0px 2px; cursor: pointer; display: inline-block;"
+        : `vertical-align: middle; height: ${Math.round(editorFontSize * 1.4)}px; width: auto; border: none; padding: 0px 2px; margin: 0px 2px; cursor: pointer; display: inline-block;`;
+
       parentWin.iMathEQ_SaveImageResult(
-        `<img class="math-formula-img" contenteditable="true" alt="${cleanLatex}" data-imath-latex="${cleanLatex}" imatheq-mml="${encodedMathML}" src="${imageData}" style="vertical-align: middle; height: auto; width: auto; max-height: 2.5em; border: none; padding: 2px; margin: 0px 2px; cursor: pointer; display: inline-block;"/>`,
+        `<img class="math-formula-img" contenteditable="true" alt="${cleanLatex}" data-imath-latex="${cleanLatex}" imatheq-mml="${encodedMathML}" src="${imageData}" style="${imgStyle}"/>`,
       );
 
       if (window.opener) {
@@ -583,6 +819,7 @@ async function saveFormula() {
 function cancelDialog() {
   const field = document.getElementById("mathlive-editor");
   field.setValue("");
+  field.focus();
 
   if (window.parent && window.parent.closeMathDialog) {
     window.parent.closeMathDialog();
@@ -607,6 +844,28 @@ function downloadImage(dataUrl, filename) {
   a.remove();
 }
 
+document.addEventListener("DOMContentLoaded", function () {
+  const mf = document.getElementById("mathlive-editor");
+  if (!mf) return;
+
+  const observer = new MutationObserver(function () {
+    const keyboard = document.querySelector(".ML__keyboard.is-visible");
+
+    if (keyboard) {
+      document.body.classList.add("keyboard-active");
+    } else {
+      document.body.classList.remove("keyboard-active");
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+});
+
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
     cancelDialog();
@@ -617,4 +876,18 @@ document.addEventListener("keydown", function (e) {
 
 window.addEventListener("load", () => {
   setupEvents();
+  renderCancelButton();
+  renderComplexButtons();
+
+  setTimeout(() => {
+    const field = document.getElementById("mathlive-editor");
+    if (field) {
+      field.focus();
+
+      field.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      field.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+      field.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      console.log("MathLive field ready for input");
+    }
+  }, 500);
 });
